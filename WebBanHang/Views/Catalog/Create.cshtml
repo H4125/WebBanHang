@@ -1,0 +1,25 @@
+﻿@model WebBanHang.Models.Catalog
+@{
+    ViewData["Title"] = "Thêm Danh mục";
+}
+
+<h2 class="mt-4 text-primary">Thêm Danh Mục Mới</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <form asp-action="Create" method="post">
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mã danh mục (VD: LAPTOP)</label>
+                <input asp-for="CatalogCode" class="form-control" required />
+            </div>
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tên danh mục (VD: Máy tính xách tay)</label>
+                <input asp-for="CatalogName" class="form-control" required />
+            </div>
+
+            <button type="submit" class="btn btn-success">Thêm mới</button>
+            <a href="/Catalog/Index" class="btn btn-secondary">Quay lại danh sách</a>
+        </form>
+    </div>
+</div>

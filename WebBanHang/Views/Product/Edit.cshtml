@@ -1,0 +1,54 @@
+﻿@model WebBanHang.Models.Product
+@{
+    ViewData["Title"] = "Sửa Sản Phẩm";
+}
+
+<h2 class="mt-4 text-warning">Cập Nhật Sản Phẩm</h2>
+<hr />
+<div class="row">
+    <div class="col-md-6">
+        <!-- Bắt buộc phải có enctype="multipart/form-data" để upload file -->
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
+            <input type="hidden" asp-for="Id" />
+
+            <!-- Trường ẩn này giúp giữ lại đường dẫn ảnh cũ nếu bạn không chọn ảnh mới -->
+            <input type="hidden" asp-for="Picture" />
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Danh mục</label>
+                <select asp-for="CatalogId" class="form-select" asp-items="ViewBag.CatalogId"></select>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mã sản phẩm</label>
+                <input asp-for="ProductCode" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Tên sản phẩm</label>
+                <input asp-for="ProductName" class="form-control" required />
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-bold">Đơn giá</label>
+                <input asp-for="UnitPrice" type="number" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Số lượng trong kho</label>
+                <input asp-for="Quantity" type="number" class="form-control" required />
+            </div>
+
+            <!-- Khu vực xử lý hình ảnh -->
+            <div class="mb-3">
+                <label class="form-label fw-bold">Hình ảnh sản phẩm</label>
+                <div class="mb-2">
+                    <img src="@Model.Picture" alt="Ảnh hiện tại" style="height: 120px; object-fit: cover; border-radius: 5px;" onerror="this.style.display='none'" />
+                </div>
+                <!-- Input type="file" sẽ mở cửa sổ chọn file trên máy tính -->
+                <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                <small class="text-muted">Chỉ tải lên nếu bạn muốn thay đổi ảnh hiện tại.</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+            <a href="/Product/Index" class="btn btn-secondary">Quay lại danh sách</a>
+        </form>
+    </div>
+</div>

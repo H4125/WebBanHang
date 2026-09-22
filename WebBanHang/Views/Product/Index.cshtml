@@ -1,0 +1,51 @@
+﻿@model IEnumerable<WebBanHang.Models.Product>
+
+@{
+    ViewData["Title"] = "Quản lý Sản phẩm";
+}
+
+<div class="d-flex justify-content-between align-items-center mt-4">
+    <h2 class="text-primary">Quản lý Sản Phẩm</h2>
+    <a href="/Product/Create" class="btn btn-success"><i class="fas fa-plus"></i> Thêm sản phẩm mới</a>
+</div>
+<hr />
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Chưa có sản phẩm nào trong hệ thống.</div>
+}
+else
+{
+    <table class="table table-bordered table-hover align-middle mt-3">
+        <thead class="table-light">
+            <tr>
+                <th>Mã SP</th>
+                <th>Hình ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Giá bán</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="fw-bold">@item.ProductCode</td>
+                    <td>
+                        <!-- Hiển thị ảnh thu nhỏ -->
+                        <img src="@item.Picture" alt="@item.ProductName" class="rounded" style="width: 60px; height: 60px; object-fit: cover;" onerror="this.src='https://via.placeholder.com/60'" />
+                    </td>
+                    <td>@item.ProductName</td>
+                    <td class="text-danger fw-bold">@item.UnitPrice.ToString("N0") đ</td>
+                    <td>
+                        <!-- Các nút thao tác -->
+                        <a href="/Product/Edit/@item.Id" class="btn btn-sm btn-warning me-1">Sửa</a>
+
+                        <!-- Nút Xóa có thêm hộp thoại xác nhận (confirm) để tránh xóa nhầm -->
+                        <a href="/Product/Delete/@item.Id" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm [@item.ProductName] không?');">Xóa</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

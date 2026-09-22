@@ -1,0 +1,15 @@
+﻿@{
+    ViewData["Title"] = "Kết quả thanh toán";
+}
+
+<div class="container text-center mt-5">
+    @if (ViewBag.Message != null && ViewBag.Message.Contains("Đã thanh toán thành công!"))
+    {
+        <h2 class="text-success"><i class="fas fa-check-circle"></i> @ViewBag.Message</h2>
+    }
+    else
+    {
+        <h2 class="text-danger"><i class="fas fa-times-circle"></i> @ViewBag.Message</h2>
+    }
+    <a href="/" class="btn btn-primary mt-4">Quay lại trang chủ</a>
+</div>
