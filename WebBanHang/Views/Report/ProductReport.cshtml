@@ -1,0 +1,124 @@
+﻿@model WebBanHang.Models.ProductReportFilterViewModel
+
+@{
+    ViewBag.Title = "Báo Cáo Bán Hàng Máy Tính";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Báo Cáo Bán Hàng Máy Tính</h2>
+        <button onclick="window.print()" class="btn btn-outline-secondary">In Báo Cáo</button>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-primary shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">TỔNG DOANH THU</small>
+                <h4 class="text-success fw-bold mb-0 mt-1">@(((decimal)ViewBag.TotalRevenue).ToString("N0")) VNĐ</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-primary shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">TỔNG ĐƠN HÀNG</small>
+                <h4 class="text-primary fw-bold mb-0 mt-1">@ViewBag.TotalOrders đơn</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-warning shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">MÁY TÍNH ĐÃ BÁN</small>
+                <h4 class="text-warning fw-bold mb-0 mt-1">@ViewBag.TotalComputersSold chiếc</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-info shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">KHÁCH HÀNG</small>
+                <h4 class="text-info fw-bold mb-0 mt-1">@ViewBag.TotalCustomers người</h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold text-uppercase">
+            Thống Kê Chi Tiết Sản Phẩm Theo Khoảng Thời Gian
+        </div>
+        <div class="card-body">
+            <form asp-controller="Report" asp-action="ProductReport" method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Chọn sản phẩm:</label>
+                    <select name="productId" asp-items="ViewBag.ProductList" class="form-select"></select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Từ ngày:</label>
+                    <input type="date" name="fromDate" value="@(Model.FromDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Đến ngày:</label>
+                    <input type="date" name="toDate" value="@(Model.ToDate?.ToString("yyyy-MM-dd"))" class="form-control" />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Thống kê</button>
+                </div>
+            </form>
+
+            @if (Model.SelectedProductId.HasValue)
+            {
+                <div class="alert alert-info mt-4 mb-3 border-0 shadow-sm" style="background-color: #e8f4fd;">
+                    <h5 class="fw-bold mb-1">Kết quả thống kê cho: <span class="text-primary">@Model.SelectedProductName</span></h5>
+                    <p class="mb-0 text-muted">Khoảng thời gian: từ <strong>@Model.FromDate.Value.ToString("dd/MM/yyyy")</strong> đến <strong>@Model.ToDate.Value.ToString("dd/MM/yyyy")</strong></p>
+
+                    <div class="row mt-3 text-dark">
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white border rounded shadow-sm">
+                                <h6>Tổng số lượng bán ra: <span class="text-danger fw-bold fs-5">@Model.FilteredTotalQuantity chiếc</span></h6>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 bg-white border rounded shadow-sm">
+                                <h6>Tổng doanh thu mang lại: <span class="text-success fw-bold fs-5">@Model.FilteredTotalRevenue.ToString("N0") VNĐ</span></h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <h6 class="fw-bold mt-4 mb-3">Danh sách đơn hàng bán sản phẩm này trong kỳ:</h6>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle border">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Mã Đơn</th>
+                                <th>Ngày Bán</th>
+                                <th>Khách Hàng</th>
+                                <th class="text-center">Số Lượng</th>
+                                <th class="text-end">Đơn Giá</th>
+                                <th class="text-end">Thành Tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.SalesDetails != null && Model.SalesDetails.Any())
+                            {
+                                foreach (var item in Model.SalesDetails)
+                                {
+                                    <tr>
+                                        <td>#@item.OrderId</td>
+                                        <td>@item.OrderDate.ToString("dd/MM/yyyy HH:mm")</td>
+                                        <td>@item.CustomerName</td>
+                                        <td class="text-center fw-bold">@item.Quantity</td>
+                                        <td class="text-end">@item.UnitPrice.ToString("N0") VNĐ</td>
+                                        <td class="text-end fw-bold text-success">@item.TotalPrice.ToString("N0") VNĐ</td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted">Không có giao dịch nào của sản phẩm này trong khoảng thời gian đã chọn.</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>

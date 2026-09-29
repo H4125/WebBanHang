@@ -30,34 +30,46 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
-            {
-                <tr>
-                    <td><img src="@item.Picture" alt="@item.ProductName" style="width: 80px;" /></td>
-                    <td>@item.ProductName</td>
-                    <td>@item.UnitPrice.ToString("N0") đ</td>
-                    <td>
-                        <form asp-action="UpdateCart" asp-controller="Cart" method="post" class="d-flex">
-                            <input type="hidden" name="productId" value="@item.ProductId" />
-                            <input type="number" name="quantity" value="@item.Quantity" min="1" class="form-control me-2" style="width: 80px;" />
-                            <button type="submit" class="btn btn-sm btn-success">Cập nhật</button>
-                        </form>
-                    </td>
-                    <td class="fw-bold">@item.TotalPrice.ToString("N0") đ</td>
-                    <td>
-                        <a href="/Cart/RemoveCart?productId=@item.ProductId" class="btn btn-sm btn-danger">Xóa</a>
-                    </td>
-                </tr>
-            }
-        </tbody>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <!-- 1. Cột Hình ảnh -->
+            <td>
+                        <img src="@item.Picture" style="max-width: 80px;" alt="Ảnh sản phẩm" />
+            </td>
+            
+            <!-- 2. Cột Tên sản phẩm -->
+            <td>@item.ProductName</td>
+            
+            <!-- 3. Cột Đơn giá -->
+            <td>@item.UnitPrice.ToString("N0") đ</td>
+            
+            <!-- 4. Cột Số lượng (chứa form cập nhật) -->
+            <td>
+                <form action="/Cart/UpdateCart" method="post" class="d-flex">
+                    <input type="hidden" name="productId" value="@item.ProductId" />
+                    <input type="number" name="quantity" value="@item.Quantity" class="form-control me-2" style="width: 80px;" min="1" />
+                    <button type="submit" class="btn btn-success btn-sm">Cập nhật</button>
+                </form>
+            </td>
+            
+            <!-- 5. Cột Thành tiền -->
+            <td class="fw-bold text-danger">@item.TotalPrice.ToString("N0") đ</td>
+            
+            <!-- 6. Cột Thao tác -->
+            <td>
+                <a href="/Cart/RemoveCart?productId=@item.ProductId" class="btn btn-sm btn-danger">Xóa</a>
+            </td>
+        </tr>
+    }
+</tbody>
     </table>
 
     <div class="d-flex justify-content-between align-items-center mt-4">
-        <h4>Tổng tiền: <span class="text-danger fw-bold">@ViewBag.Total.ToString("N0") đ</span></h4>
+        <h4>Tổng tiền: <span class="text-danger fw-bold">@ViewBag.TotalAmount.ToString("N0") đ</span></h4>
         <div>
-            <a href="/" class="btn btn-secondary me-2">Tiếp tục mua sắm</a>
-            <a href="/Cart/Checkout" class="btn btn-info text-white">Thanh toán COD</a>
-            <a href="/Cart/PaymentWithVNPay" class="btn btn-primary">Thanh toán VNPay</a>
+            <a href="/" class="btn btn-secondary me-2" >Tiếp tục mua sắm</a>
+            <a href="/Cart/Checkout" class="btn btn-info text-white">Tiến hành Thanh toán</a>
         </div>
     </div>
 }

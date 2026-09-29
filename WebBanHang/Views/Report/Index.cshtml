@@ -1,0 +1,149 @@
+﻿@model WebBanHang.Models.ComputerReportViewModel
+
+@{
+    ViewBag.Title = "Báo Cáo Bán Hàng Máy Tính";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold">Báo Cáo Bán Hàng Máy Tính</h2>
+        <button onclick="window.print()" class="btn btn-outline-secondary">In Báo Cáo</button>
+
+    </div>
+
+    <!-- 4 THẺ THỐNG KÊ TỔNG QUAN -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-primary shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">TỔNG DOANH THU</small>
+                <h4 class="text-success fw-bold mb-0 mt-1">@Model.TotalRevenue.ToString("N0") VNĐ</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-primary shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">TỔNG ĐƠN HÀNG</small>
+                <h4 class="text-primary fw-bold mb-0 mt-1">@Model.TotalOrders đơn</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-warning shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">MÁY TÍNH ĐÃ BÁN</small>
+                <h4 class="text-warning fw-bold mb-0 mt-1">@Model.TotalComputersSold chiếc</h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card p-3 border-start border-4 border-info shadow-sm">
+                <small class="text-uppercase fw-bold text-muted">KHÁCH HÀNG</small>
+                <h4 class="text-info fw-bold mb-0 mt-1">@Model.TotalCustomers người</h4>
+            </div>
+        </div>
+    </div>
+
+    <!-- KHU VỰC LỌC THỐNG KÊ -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-light fw-bold text-uppercase">
+            Thống Kê Chi Tiết Sản Phẩm Theo Khoảng Thời Gian
+        </div>
+        <div class="card-body">
+            <form asp-controller="Report" asp-action="ProductReport" method="get" class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-bold">Chọn sản phẩm:</label>
+                    <select name="productId" asp-items="ViewBag.ProductList" class="form-select" required>
+                        <option value="">-- Chọn sản phẩm cần thống kê --</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Từ ngày:</label>
+                    <input type="date" name="fromDate" value="@DateTime.Now.AddDays(-30).ToString("yyyy-MM-dd")" class="form-control" required />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label fw-bold">Đến ngày:</label>
+                    <input type="date" name="toDate" value="@DateTime.Now.ToString("yyyy-MM-dd")" class="form-control" required />
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 fw-bold">Thống kê</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- BIỂU ĐỒ DOANH THU THEO NGÀY -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Biểu Đồ Doanh Thu Theo Ngày</h5>
+            <canvas id="revenueChart" style="max-height: 320px;"></canvas>
+        </div>
+    </div>
+
+    <!-- TOP 5 MÁY TÍNH BÁN CHẠY NHẤT -->
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="fw-bold mb-3">Top 5 Máy Tính Bán Chạy Nhất</h5>
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Mã SP</th>
+                        <th>Tên Máy Tính</th>
+                        <th class="text-center">Số Lượng Bán</th>
+                        <th class="text-end">Doanh Thu</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.TopProducts != null && Model.TopProducts.Any())
+                    {
+                        foreach (var item in Model.TopProducts)
+                        {
+                            <tr>
+                                <td>@item.ProductCode</td>
+                                <td class="fw-bold">@item.ProductName</td>
+                                <td class="text-center">@item.QuantitySold</td>
+                                <td class="text-end text-success fw-bold">@item.TotalRevenue.ToString("N0") VNĐ</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">Chưa có dữ liệu bán hàng.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: @Html.Raw(Json.Serialize(Model.ChartLabels)),
+            datasets: [{
+                label: 'Doanh Thu Theo Ngày (VNĐ)',
+                data: @Html.Raw(Json.Serialize(Model.ChartData)),
+                borderColor: '#0d6efd',
+                backgroundColor: 'rgba(13, 110, 253, 0.15)',
+                fill: true,
+                tension: 0.3,
+                pointRadius: 4,
+                pointHoverRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString('vi-VN') + ' VNĐ';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>

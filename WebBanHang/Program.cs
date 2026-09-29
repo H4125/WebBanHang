@@ -17,7 +17,7 @@ builder.Services.AddSession(options =>
 
 
 
-builder.Services.AddDbContext<PCStoreContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("QuanLySanPham_2311061964")));
+builder.Services.AddDbContext<PCStoreContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("PCStore_update")));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

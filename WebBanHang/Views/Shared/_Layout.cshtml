@@ -47,9 +47,28 @@
 
                      </ul>
                     <ul class="navbar-nav">
+                                        
+                    @if (userRole == 1 || userRole == 2)
+                    {
+                        <!-- Giao diện dành riêng cho Admin/Nhân viên -->
                         <li class="nav-item">
-                            <a class="nav-link text-dark" href="/Cart/Index">Giỏ hàng</a>
+                            <a class="nav-link text-danger fw-bold" href="/Order/AdminManage">Quản lý/Xác nhận đơn hàng</a>
                         </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link text-danger fw-bold" href="/Report/Index">Thống kê doanh thu</a>
+                        </li>
+                    }
+                    else
+                    {
+                        <!-- Giao diện dành cho Khách hàng (Role khác 1, 2 hoặc chưa đăng nhập) -->
+                        <li class="nav-item">
+                            <a class="nav-link text-dark " href="/Cart/Index">Giỏ hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/Order/MyOrders">Lịch sử đơn hàng</a>
+                        </li>
+}
                         @{
                             var username = HttpContextAccessor.HttpContext.Session.GetString("Username");
                             if (username != null)
@@ -64,7 +83,7 @@
                             else
                             {
                                 <li class="nav-item">
-                                    <a class="nav-link text-danger" href="/Account/Login">Đăng nhập/</a>
+                                    <a class="nav-link text-danger" href="/Account/Login">Đăng nhập</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-primary" href="/Account/Register">Đăng ký</a>

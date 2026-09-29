@@ -18,6 +18,8 @@ public partial class Order
     public string? CustomerPhone { get; set; }
 
     public virtual Customer? Customer { get; set; }
+    public int OrderStatus { get; set; }
+    public int ShippingStatus { get; set; }
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 }

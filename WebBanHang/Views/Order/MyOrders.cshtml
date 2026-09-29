@@ -1,0 +1,49 @@
+﻿@model IEnumerable<WebBanHang.Models.Order>
+@{
+    ViewData["Title"] = "Lịch sử mua hàng";
+}
+
+<h2 class="mt-4 text-primary">Lịch sử đơn hàng của bạn</h2>
+<hr />
+
+@if (!Model.Any())
+{
+    <div class="alert alert-info">Bạn chưa có đơn hàng nào.</div>
+}
+else
+{
+    <table class="table table-bordered table-hover mt-3">
+        <thead class="table-light">
+            <tr>
+                <th>Mã Đơn</th>
+                <th>Ngày Đặt</th>
+                <th>Trạng thái duyệt</th>
+                <th>Trạng thái giao hàng</th>
+                <th>Thao tác</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td class="fw-bold">#@item.Id</td>
+                    <td>@item.OrderDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>
+                        @if (item.OrderStatus == 0) { <span class="badge bg-warning text-dark">Chờ duyệt</span> }
+                        else if (item.OrderStatus == 1) { <span class="badge bg-success">Đã duyệt</span> }
+                        else if (item.OrderStatus == 2) { <span class="badge bg-danger">Đã hủy</span> }
+                    </td>
+                    <td>
+                        @if (item.ShippingStatus == 0) { <span class="badge bg-secondary">Chờ lấy hàng</span> }
+                        else if (item.ShippingStatus == 1) { <span class="badge bg-primary">Đang giao</span> }
+                        else if (item.ShippingStatus == 2) { <span class="badge bg-success">Giao thành công</span> }
+                        else if (item.ShippingStatus == 3) { <span class="badge bg-danger">Thất bại/Hoàn hàng</span> }
+                    </td>
+                    <td>
+                        <a href="/Order/Details/@item.Id" class="btn btn-sm btn-outline-info">Xem chi tiết</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

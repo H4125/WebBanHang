@@ -1,0 +1,55 @@
+﻿@model IEnumerable<WebBanHang.Models.Order> 
+@{
+    ViewData["Title"] = "Quản lý đơn hàng (Admin)";
+}
+
+<h2 class="mt-4 text-danger">Quản lý toàn bộ đơn hàng</h2>
+<hr />
+
+<table class="table table-bordered table-hover mt-3">
+    <thead class="table-light">
+        <tr>
+            <th>Mã Đơn</th>
+            <th>Khách Hàng (SĐT)</th>
+            <th>Địa chỉ giao</th>
+            <th>Trạng Thái Xử Lý</th>
+            <th>Hành Động</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="fw-bold">#@item.Id<br />
+                    <small class="text-muted">@item.OrderDate?.ToString("dd/MM/yyyy HH:mm")</small>
+                </td>
+                <td>Mã KH: @item.CustomerId <br /> 
+                    SĐT: @(item.CustomerPhone ?? "N/A")
+                </td>
+                <td>@(item.ShippingAddress ?? "N/A")</td>
+                
+                <td colspan="2">
+                    <form asp-action="UpdateStatus" asp-controller="Order" method="post" class="d-flex align-items-center gap-2">
+                        <input type="hidden" name="orderId" value="@item.Id" />
+                        
+                        <select name="orderStatus" class="form-select form-select-sm" style="width: 140px;">
+                            <option value="0" selected="@(item.OrderStatus == 0)">Chờ duyệt</option>
+                            <option value="1" selected="@(item.OrderStatus == 1)">Đã duyệt</option>
+                            <option value="2" selected="@(item.OrderStatus == 2)">Đã hủy</option>
+                        </select>
+
+                        <select name="shippingStatus" class="form-select form-select-sm" style="width: 170px;">
+                            <option value="0" selected="@(item.ShippingStatus == 0)">Chờ lấy hàng</option>
+                            <option value="1" selected="@(item.ShippingStatus == 1)">Đang giao</option>
+                            <option value="2" selected="@(item.ShippingStatus == 2)">Giao thành công</option>
+                            <option value="3" selected="@(item.ShippingStatus == 3)">Thất bại/Hoàn hàng</option>
+                        </select>
+
+                        <button type="submit" class="btn btn-sm btn-primary">Cập nhật</button>
+                        <a href="/Order/Details/@item.Id" class="btn btn-sm btn-outline-info">Chi tiết</a>
+                    </form>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -1,0 +1,89 @@
+﻿@model IEnumerable<WebBanHang.Models.CartItem>
+@{
+    ViewData["Title"] = "Thanh toán đơn hàng";
+}
+
+<h2 class="mt-4 text-primary">Thông tin thanh toán và giao hàng</h2>
+<hr />
+
+<div class="row">
+    <!-- CỘT TRÁI: FORM ĐIỀN THÔNG TIN -->
+    <div class="col-md-6">
+        <form asp-action="Checkout" asp-controller="Cart" method="post">
+            
+            <div class="mb-3">
+                <label class="form-label fw-bold">Số điện thoại nhận hàng:</label>
+                <input type="text" name="customerPhone" class="form-control" required placeholder="Nhập số điện thoại..." />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Địa chỉ giao hàng:</label>
+                <textarea name="shippingAddress" class="form-control" rows="3" required placeholder="Nhập địa chỉ chi tiết (Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố)..."></textarea>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label fw-bold">Phương thức thanh toán:</label>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="payCOD" value="COD" checked />
+                    <label class="form-check-label" for="payCOD">
+                        Thanh toán khi nhận hàng (COD)
+                    </label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="radio" name="paymentMethod" id="payVNPAY" value="VNPAY" />
+                    <label class="form-check-label text-primary fw-bold" for="payVNPAY">
+                        Thanh toán trực tuyến qua VNPAY
+                    </label>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-success btn-lg w-100">XÁC NHẬN ĐẶT HÀNG</button>
+            <a href="/Cart" class="btn btn-secondary mt-3">Quay lại giỏ hàng</a>
+        </form>
+    </div>
+    
+    <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG -->
+    <div class="col-md-6">
+        <div class="card shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0 text-info fw-bold">Tóm tắt đơn hàng</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-borderless align-middle mb-0">
+                        <thead class="table-light border-bottom">
+                            <tr>
+                                <th>Sản phẩm</th>
+                                <th>Đơn giá</th>
+                                <th class="text-center">SL</th>
+                                <th class="text-end">Thành tiền</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in Model)
+                            {
+                                <tr class="border-bottom">
+                                    <td>
+                                        <img src="@item.Picture" style="width: 40px; height: 40px; object-fit: cover;" class="me-2 rounded" alt="Ảnh SP" />
+                                        <span class="small">@item.ProductName</span>
+                                    </td>
+                                    <td class="small">@item.UnitPrice.ToString("N0") đ</td>
+                                    <td class="text-center">@item.Quantity</td>
+                                    <td class="text-end fw-bold text-danger small">@item.TotalPrice.ToString("N0") đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="bg-light">
+                            <tr>
+                                <td colspan="3" class="text-end fw-bold">Tổng thanh toán:</td>
+                                <td class="text-end fw-bold text-danger fs-5">
+                                    @Model.Sum(x => x.TotalPrice).ToString("N0") đ
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

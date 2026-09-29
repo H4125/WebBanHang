@@ -1,15 +1,18 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using WebBanHang.Models;
-using WebBanHang.Helpers;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration; // Dùng để đọc appsettings.json thay cho ConfigurationManager
+using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Extensions.Configuration;
-using System;
+using WebBanHang.Helpers;
+using WebBanHang.Models; 
 
 namespace WebBanHang.Controllers
 {
     public class CartController : Controller
     {
+        // 1. Dùng Dependency Injection thay vì new DataContext
         private readonly PCStoreContext _context;
         private readonly IConfiguration _configuration;
         const string CART_KEY = "Cart";
@@ -20,39 +23,47 @@ namespace WebBanHang.Controllers
             _configuration = configuration;
         }
 
-        // Hàm hỗ trợ: Lấy giỏ hàng từ Session
-        private List<CartItem> GetCartItems()
+        // Hàm hỗ trợ lấy giỏ hàng từ Session
+
+        public List<CartItem> GetCartItems()
         {
             var cart = HttpContext.Session.GetObjectFromJson<List<CartItem>>(CART_KEY);
-            return cart ?? new List<CartItem>();
+            if (cart == null)
+            {
+                cart = new List<CartItem> ();
+            }
+            return cart;
         }
 
-        // Xem giỏ hàng
         public IActionResult Index()
         {
             var cart = GetCartItems();
-            ViewBag.Total = cart.Sum(item => item.TotalPrice);
+            if (cart.Count == 0)
+            {
+                ViewBag.Message = "Giỏ hàng của bạn đang trống!";
+            }
+            else
+            {
+                ViewBag.TotalQuantity = cart.Sum(x => x.Quantity);
+                ViewBag.TotalAmount = cart.Sum(x => x.TotalPrice);
+            }
             return View(cart);
         }
 
-        // Thêm sản phẩm vào giỏ
         public IActionResult AddToCart(int productId)
         {
             var cart = GetCartItems();
             var item = cart.FirstOrDefault(p => p.ProductId == productId);
-
             var product = _context.Products.Find(productId);
-            if (product == null)
-            {
-                TempData["Error"] = "Sản phẩm không tồn tại!";
-                return RedirectToAction(nameof(Index));
-            }
+
+            if (product == null) return RedirectToAction(nameof(Index));
 
             int currentQty = item != null ? item.Quantity : 0;
 
+            // Kiểm tra tồn kho (Logic của chúng ta)
             if (currentQty + 1 > product.Quantity)
             {
-                TempData["Error"] = $"Rất tiếc, '{product.ProductName}' chỉ còn {product.Quantity} chiếc trong kho!";
+                TempData["Error"] = $"Sản phẩm '{product.ProductName}' chỉ còn {product.Quantity} chiếc!";
                 return RedirectToAction(nameof(Index));
             }
 
@@ -76,81 +87,129 @@ namespace WebBanHang.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // Cập nhật số lượng
+        // --- TÍNH NĂNG MỚI: Cập nhật AJAX (Đã sửa cú pháp Core) ---
+        [HttpPost]
+        public JsonResult UpdateQuantityAjax(int id, int quantity)
+        {
+            var cart = GetCartItems();
+            var item = cart.FirstOrDefault(x => x.ProductId == id);
+            var product = _context.Products.Find(id);
+
+            if (item != null && product != null)
+            {
+                // Kiểm tra tồn kho trước khi cập nhật bằng AJAX
+                if (quantity > product.Quantity)
+                {
+                    return Json(new { Success = false, Message = $"Chỉ còn {product.Quantity} sản phẩm trong kho." });
+                }
+                item.Quantity = quantity > 0 ? quantity : 1;
+                HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
+            }
+
+            var totalAmount = cart.Sum(x => x.TotalPrice);
+            var totalQuantity = cart.Sum(x => x.Quantity);
+
+            return Json(new
+            {
+                Success = true,
+                ItemTotalStr = string.Format("{0:0,0} VNĐ", item?.TotalPrice ?? 0),
+                TotalAmountStr = string.Format("{0:0,0} VNĐ", totalAmount),
+                TotalQuantity = totalQuantity
+            });
+        }
+
+
         [HttpPost]
         public IActionResult UpdateCart(int productId, int quantity)
         {
+            // 1. Lấy giỏ hàng hiện tại từ Session
             var cart = GetCartItems();
-            var item = cart.FirstOrDefault(p => p.ProductId == productId);
+
+            // 2. Tìm sản phẩm khách hàng muốn cập nhật
+            var item = cart.FirstOrDefault(x => x.ProductId == productId);
+
             if (item != null)
             {
-                var product = _context.Products.Find(productId);
-                if (product != null)
-                {
-                    int desiredQuantity = quantity > 0 ? quantity : 1;
+                // 3. Cập nhật số lượng mới (đảm bảo số lượng luôn >= 1)
+                item.Quantity = quantity > 0 ? quantity : 1;
 
-                    // Kiểm tra tồn kho trước khi cập nhật
-                    if (desiredQuantity > product.Quantity)
-                    {
-                        TempData["Error"] = $"Rất tiếc, '{product.ProductName}' chỉ còn {product.Quantity} chiếc trong kho!";
-                    }
-                    else
-                    {
-                        item.Quantity = desiredQuantity;
-                        HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
-                    }
-                }
+                // 4. Lưu giỏ hàng mới đè lên giỏ hàng cũ trong Session
+                HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
             }
-            return RedirectToAction(nameof(Index));
+
+            // 5. Trả khách hàng về lại trang Giỏ hàng để xem kết quả
+            return RedirectToAction("Index");
         }
 
-        // Xóa sản phẩm khỏi giỏ
-        public IActionResult RemoveCart(int productId)
+        // --- TÍNH NĂNG MỚI: Xóa AJAX ---
+        [HttpPost]
+        public JsonResult RemoveItemAjax(int id)
         {
             var cart = GetCartItems();
-            var item = cart.FirstOrDefault(p => p.ProductId == productId);
+            var item = cart.FirstOrDefault(x => x.ProductId == id);
+
             if (item != null)
             {
                 cart.Remove(item);
                 HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
             }
-            return RedirectToAction(nameof(Index));
+
+            var totalAmount = cart.Sum(x => x.TotalPrice);
+            var totalQuantity = cart.Sum(x => x.Quantity);
+
+            return Json(new
+            {
+                Success = true,
+                TotalAmountStr = string.Format("{0:0,0} VNĐ", totalAmount),
+                TotalQuantity = totalQuantity,
+                CartEmpty = cart.Count == 0
+            });
         }
 
-        // Thanh toán COD
-        [HttpGet]
         public IActionResult Checkout()
         {
-            var username = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(username))
-            {
-                return RedirectToAction("Login", "Account");
-            }
-
             var cart = GetCartItems();
-            if (!cart.Any()) return RedirectToAction("Index");
+            if (cart.Count == 0) return RedirectToAction(nameof(Index));
+            return View(cart);
+        }
 
-            var order = new Order
+        [HttpPost]
+        public IActionResult Checkout(IFormCollection form) // ASP.NET Core dùng IFormCollection
+        {
+            var cart = GetCartItems();
+            if (cart == null || !cart.Any()) return RedirectToAction(nameof(Index));
+
+            string paymentMethod = form["paymentMethod"];
+            int currentCustomerId = 1; // Mặc định hoặc lấy từ Session đăng nhập
+
+            // 1. Tạo đơn hàng với các cột trạng thái mới
+            Order newOrder = new Order
             {
-                CustomerId = HttpContext.Session.GetInt32("AccountId"),
-                OrderDate = System.DateTime.Now,
-                Status = false
+                OrderDate = DateTime.Now,
+                CustomerId = currentCustomerId,
+                CustomerPhone = form["customerPhone"],
+                ShippingAddress = form["shippingAddress"],
+                Status = false,
+                OrderStatus = 0,    // Chờ duyệt
+                ShippingStatus = 0  // Chờ lấy hàng
             };
-            _context.Orders.Add(order);
+
+            _context.Orders.Add(newOrder); // Dùng .Add() thay cho InsertOnSubmit
             _context.SaveChanges();
 
+            // 2. Thêm chi tiết và TRỪ TỒN KHO
             foreach (var item in cart)
             {
-                var detail = new OrderDetail
+                OrderDetail detail = new OrderDetail
                 {
-                    OrderId = order.Id,
+                    OrderId = newOrder.Id,
                     ProductId = item.ProductId,
                     Quantity = item.Quantity,
                     UnitPrice = item.UnitPrice
                 };
                 _context.OrderDetails.Add(detail);
 
-                // TRỪ SỐ LƯỢNG TRONG KHO (COD)
+                // Trừ tồn kho trong DB
                 var productInDb = _context.Products.Find(item.ProductId);
                 if (productInDb != null)
                 {
@@ -158,129 +217,84 @@ namespace WebBanHang.Controllers
                     _context.Products.Update(productInDb);
                 }
             }
-            _context.SaveChanges();
+            _context.SaveChanges(); // Dùng .SaveChanges() thay cho SubmitChanges
 
+            // 3. Xử lý VNPAY (Đã sửa cách đọc file cấu hình Core)
+            if (paymentMethod == "VNPAY")
+            {
+                string vnp_Url = _configuration["VNPay:BaseUrl"];
+                string vnp_TmnCode = _configuration["VNPay:TmnCode"];
+                string vnp_HashSecret = _configuration["VNPay:HashSecret"];
+                string vnp_Returnurl = _configuration["VNPay:ReturnUrl"];
+
+                long amount = (long)(cart.Sum(x => x.TotalPrice) * 100);
+
+                // Khởi tạo thư viện VNPay (Giả định bạn đã có class VnPayLibrary trong Models)
+                VnPayLibrary vnpay = new VnPayLibrary();
+                vnpay.AddRequestData("vnp_Version", "2.1.0");
+                vnpay.AddRequestData("vnp_Command", "pay");
+                vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
+                vnpay.AddRequestData("vnp_Amount", amount.ToString());
+                vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
+                vnpay.AddRequestData("vnp_CurrCode", "VND");
+                vnpay.AddRequestData("vnp_IpAddr", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "127.0.0.1");
+                vnpay.AddRequestData("vnp_Locale", "vn");
+                vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang: " + newOrder.Id);
+                vnpay.AddRequestData("vnp_OrderType", "other");
+                vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
+                vnpay.AddRequestData("vnp_TxnRef", newOrder.Id.ToString());
+
+                string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
+                return Redirect(paymentUrl);
+            }
+
+            // Thanh toán COD
             HttpContext.Session.Remove(CART_KEY);
-
-            return RedirectToAction("CheckoutSuccess");
+            return RedirectToAction("OrderSuccess");
         }
 
-        public IActionResult CheckoutSuccess()
+        public IActionResult OrderSuccess()
         {
             return View();
         }
 
-        // Chuyển hướng thanh toán VNPay
-        public IActionResult PaymentWithVNPay()
-        {
-            var username = HttpContext.Session.GetString("Username");
-            if (string.IsNullOrEmpty(username)) return RedirectToAction("Login", "Account");
-
-            var cart = GetCartItems();
-            if (!cart.Any()) return RedirectToAction("Index");
-
-            var order = new Order
-            {
-                CustomerId = HttpContext.Session.GetInt32("AccountId"),
-                OrderDate = DateTime.Now,
-                Status = false
-            };
-            _context.Orders.Add(order);
-            _context.SaveChanges();
-
-            foreach (var item in cart)
-            {
-                _context.OrderDetails.Add(new OrderDetail
-                {
-                    OrderId = order.Id,
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    UnitPrice = item.UnitPrice
-                });
-            }
-            _context.SaveChanges();
-            // Lưu ý: Chưa trừ số lượng kho ở đây vì khách chưa thanh toán xong
-
-            string vnp_Returnurl = _configuration["VnPay:ReturnUrl"];
-            string vnp_Url = _configuration["VnPay:BaseUrl"];
-            string vnp_TmnCode = _configuration["VnPay:TmnCode"];
-            string vnp_HashSecret = _configuration["VnPay:HashSecret"];
-
-            VnPayLibrary vnpay = new VnPayLibrary();
-            vnpay.AddRequestData("vnp_Version", "2.1.0");
-            vnpay.AddRequestData("vnp_Command", "pay");
-            vnpay.AddRequestData("vnp_TmnCode", vnp_TmnCode);
-            vnpay.AddRequestData("vnp_Amount", (cart.Sum(c => c.TotalPrice) * 100).ToString("0"));
-            vnpay.AddRequestData("vnp_CreateDate", DateTime.Now.ToString("yyyyMMddHHmmss"));
-            vnpay.AddRequestData("vnp_CurrCode", "VND");
-            vnpay.AddRequestData("vnp_IpAddr", VnPayLibrary.GetIpAddress(HttpContext));
-            vnpay.AddRequestData("vnp_Locale", "vn");
-            vnpay.AddRequestData("vnp_OrderInfo", "Thanh toan don hang " + order.Id);
-            vnpay.AddRequestData("vnp_OrderType", "other");
-            vnpay.AddRequestData("vnp_ReturnUrl", vnp_Returnurl);
-            vnpay.AddRequestData("vnp_TxnRef", order.Id.ToString());
-
-            string paymentUrl = vnpay.CreateRequestUrl(vnp_Url, vnp_HashSecret);
-            return Redirect(paymentUrl);
-        }
-
-        // Nhận kết quả VNPay
         public IActionResult PaymentCallback()
         {
-            var vnpay = new VnPayLibrary();
-
-            foreach (var (key, value) in Request.Query)
+            // Logic callback VNPay giữ nguyên luồng, chuyển cú pháp đọc QueryString sang ASP.NET Core
+            var queryDictionary = HttpContext.Request.Query;
+            if (queryDictionary.Count > 0)
             {
-                if (!string.IsNullOrEmpty(key) && key.StartsWith("vnp_"))
-                {
-                    vnpay.AddResponseData(key, value.ToString());
-                }
-            }
+                string vnp_HashSecret = _configuration["VNPay:HashSecret"];
+                VnPayLibrary vnpay = new VnPayLibrary();
 
-            string vnp_HashSecret = _configuration["VnPay:HashSecret"];
-            string vnp_SecureHash = Request.Query["vnp_SecureHash"];
-            long orderId = Convert.ToInt64(vnpay.GetResponseData("vnp_TxnRef"));
-            string vnp_ResponseCode = vnpay.GetResponseData("vnp_ResponseCode");
-
-            bool checkSignature = vnpay.ValidateSignature(vnp_SecureHash, vnp_HashSecret);
-            if (checkSignature)
-            {
-                if (vnp_ResponseCode == "00")
+                foreach (var kvp in queryDictionary)
                 {
-                    var order = _context.Orders.Find((int)orderId);
-                    if (order != null)
+                    if (!string.IsNullOrEmpty(kvp.Key) && kvp.Key.StartsWith("vnp_"))
                     {
-                        order.Status = true;
-
-                        // TRỪ SỐ LƯỢNG TRONG KHO (VNPAY)
-                        // Lấy danh sách sản phẩm của đơn hàng này để trừ
-                        var orderDetails = _context.OrderDetails.Where(od => od.OrderId == orderId).ToList();
-                        foreach (var detail in orderDetails)
-                        {
-                            var productInDb = _context.Products.Find(detail.ProductId);
-                            if (productInDb != null)
-                            {
-                                productInDb.Quantity -= detail.Quantity;
-                                _context.Products.Update(productInDb);
-                            }
-                        }
-
-                        _context.SaveChanges();
+                        vnpay.AddResponseData(kvp.Key, kvp.Value.ToString());
                     }
-                    HttpContext.Session.Remove(CART_KEY);
-                    ViewBag.Message = "Thanh toán thành công! Đơn hàng của bạn đã được ghi nhận.";
                 }
-                else
-                {
-                    ViewBag.Message = "Thanh toán thất bại (Mã lỗi: " + vnp_ResponseCode + ").";
-                }
-            }
-            else
-            {
-                ViewBag.Message = "Lỗi bảo mật: Chữ ký số không hợp lệ!";
-            }
 
-            return View();
+                long orderId = Convert.ToInt64(vnpay.GetResponseData("vnp_TxnRef"));
+                long vnp_ResponseCode = Convert.ToInt64(vnpay.GetResponseData("vnp_ResponseCode"));
+                bool checkSignature = vnpay.ValidateSignature(vnpay.GetResponseData("vnp_SecureHash"), vnp_HashSecret);
+
+                if (checkSignature)
+                {
+                    if (vnp_ResponseCode == 0)
+                    {
+                        Order order = _context.Orders.FirstOrDefault(x => x.Id == orderId);
+                        if (order != null)
+                        {
+                            order.Status = true; // Đã thanh toán
+                            _context.SaveChanges();
+                        }
+                        HttpContext.Session.Remove(CART_KEY);
+                        return RedirectToAction("OrderSuccess");
+                    }
+                }
+            }
+            return RedirectToAction("Index", "Home");
         }
     }
 }
