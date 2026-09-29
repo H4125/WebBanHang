@@ -3,47 +3,50 @@
     ViewData["Title"] = "Thêm Sản Phẩm";
 }
 
-<h2 class="mt-4 text-primary">Thêm Sản Phẩm Mới</h2>
-<hr />
-<div class="row">
-    <div class="col-md-6">
-        <!-- Bắt buộc thêm enctype="multipart/form-data" -->
-        <form asp-action="Create" method="post" enctype="multipart/form-data">
+<div class="container mt-4">
+    <h2>Thêm Sản Phẩm Mới</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-8">
+            <!-- QUAN TRỌNG: enctype="multipart/form-data" để upload file -->
+            <form asp-action="Create" method="post" enctype="multipart/form-data">
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Danh mục</label>
-                <select asp-for="CatalogId" class="form-select" asp-items="ViewBag.CatalogId"></select>
-            </div>
+                <div class="mb-3">
+                    <label asp-for="CatalogId" class="form-label">Chọn Danh mục:</label>
+                    <select asp-for="CatalogId" asp-items="ViewBag.CatalogId" class="form-control">
+                        <option value="">-- Chọn danh mục --</option>
+                    </select>
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Mã sản phẩm</label>
-                <input asp-for="ProductCode" class="form-control" required />
-            </div>
+                <div class="mb-3">
+                    <label asp-for="ProductCode" class="form-label">Mã SP (SKU):</label>
+                    <input asp-for="ProductCode" class="form-control" required />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Tên sản phẩm</label>
-                <input asp-for="ProductName" class="form-control" required />
-            </div>
+                <div class="mb-3">
+                    <label asp-for="ProductName" class="form-label">Tên sản phẩm:</label>
+                    <input asp-for="ProductName" class="form-control" required />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Đơn giá</label>
-                <input asp-for="UnitPrice" type="number" class="form-control" required />
-            </div>
+                <div class="mb-3">
+                    <label asp-for="UnitPrice" class="form-label">Đơn giá:</label>
+                    <input asp-for="UnitPrice" type="number" class="form-control" required />
+                </div>
 
-            <div class="mb-3">
-                <label class="form-label fw-bold">Số lượng trong kho</label>
-                <input asp-for="Quantity" type="number" class="form-control" required />
-            </div>
+                <div class="mb-3">
+                    <label asp-for="Quantity" class="form-label">Số lượng tồn kho:</label>
+                    <input asp-for="Quantity" type="number" class="form-control" required />
+                </div>
 
-            <!-- Khu vực chọn ảnh từ máy tính -->
-            <div class="mb-3">
-                <label class="form-label fw-bold">Hình ảnh sản phẩm</label>
-                <input type="file" name="imageFile" class="form-control" accept="image/*" />
-            </div>
+                <!-- Input upload file với name="imageFile" khớp tham số Controller -->
+                <div class="mb-3">
+                    <label class="form-label">Hình ảnh sản phẩm:</label>
+                    <input type="file" name="imageFile" class="form-control" accept="image/*" />
+                </div>
 
-            <button type="submit" class="btn btn-success">Thêm mới</button>
-            <a href="/Product/Index" class="btn btn-secondary">Quay lại danh sách</a>
-
-        </form>
+                <button type="submit" class="btn btn-success">Thêm mới</button>
+                <a asp-action="Index" class="btn btn-secondary">Quay về</a>
+            </form>
+        </div>
     </div>
 </div>

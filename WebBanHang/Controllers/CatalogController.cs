@@ -30,7 +30,18 @@ namespace WebBanHang.Controllers
             return View(catalogs);
         }
 
-        // 2. THÊM DANH MỤC MỚI
+        // 2. HIỂN THỊ SẢN PHẨM THEO DANH MỤC (Đã được chuyển đổi từ file của bạn)
+        public IActionResult SanPhams(int catalogId)
+        {
+            // Không cần tạo DataContext mới, sử dụng _context có sẵn
+            var dsProduct = _context.Products
+                .Where(x => x.CatalogId == catalogId)
+                .ToList();
+
+            return View(dsProduct);
+        }
+
+        // 3. THÊM DANH MỤC MỚI
         [HttpGet]
         public IActionResult Create()
         {
@@ -50,6 +61,49 @@ namespace WebBanHang.Controllers
                 return RedirectToAction(nameof(Index));
             }
             return View(catalog);
+        }
+
+        // 4. SỬA DANH MỤC (Đã được chuyển đổi để dùng Model Binding thay cho Request.Form)
+        [HttpGet]
+        public IActionResult Edit(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var catalog = _context.Catalogs.FirstOrDefault(x => x.Id == id);
+            if (catalog == null)
+            {
+                return NotFound();
+            }
+            return View(catalog);
+        }
+
+        [HttpPost]
+        public IActionResult Edit(Catalog catalog)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            if (ModelState.IsValid)
+            {
+                _context.Catalogs.Update(catalog);
+                _context.SaveChanges();
+                return RedirectToAction(nameof(Index));
+            }
+            return View(catalog);
+        }
+
+        // 5. XÓA DANH MỤC (Đã được chuyển đổi lệnh DeleteOnSubmit thành Remove)
+        public IActionResult Delete(int id)
+        {
+            if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            var catalog = _context.Catalogs.FirstOrDefault(x => x.Id == id);
+            if (catalog != null)
+            {
+                _context.Catalogs.Remove(catalog);
+                _context.SaveChanges();
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

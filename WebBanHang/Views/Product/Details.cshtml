@@ -1,0 +1,42 @@
+﻿@model WebBanHang.Models.Product
+@{
+    ViewData["Title"] = "Chi tiết Sản Phẩm";
+}
+
+<div class="container mt-4">
+    <h2>Chi tiết Sản Phẩm</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-4 text-center">
+            <img src="@Model.Picture" alt="@Model.ProductName" class="img-fluid rounded shadow-sm" />
+        </div>
+        <div class="col-md-8">
+            <table class="table table-striped">
+                <tr>
+                    <th width="30%">Mã sản phẩm:</th>
+                    <td>@Model.ProductCode</td>
+                </tr>
+                <tr>
+                    <th>Tên sản phẩm:</th>
+                    <td>@Model.ProductName</td>
+                </tr>
+                <tr>
+                    <th>Thuộc danh mục:</th>
+                    <td>@(Model.Catalog != null ? Model.Catalog.CatalogName : "Không có")</td>
+                </tr>
+                <tr>
+                    <th>Đơn giá:</th>
+                    <td class="text-danger fw-bold">@String.Format("{0:N0} VNĐ", Model.UnitPrice)</td>
+                </tr>
+                <tr>
+                    <th>Số lượng tồn kho:</th>
+                    <td>@Model.Quantity</td>
+                </tr>
+            </table>
+            <div class="mt-3">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Sửa</a>
+                <a asp-action="Index" class="btn btn-secondary">Quay về danh sách</a>
+            </div>
+        </div>
+    </div>
+</div>

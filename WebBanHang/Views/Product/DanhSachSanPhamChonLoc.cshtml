@@ -1,0 +1,26 @@
+﻿@model IEnumerable<WebBanHang.Controllers.ProductForDisplay>
+@{
+    ViewData["Title"] = "Sản phẩm chọn lọc";
+}
+
+<div class="container mt-4">
+    <h2>Danh Sách Sản Phẩm Chọn Lọc</h2>
+    <table class="table table-bordered">
+        <thead class="table-primary">
+            <tr>
+                <th>Mã SP</th>
+                <th>Tên SP</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.ProductCode</td>
+                    <td>@item.ProductName</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <a asp-action="Index" class="btn btn-secondary">Quay về</a>
+</div>
