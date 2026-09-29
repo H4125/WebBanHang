@@ -135,5 +135,50 @@ namespace WebBanHang.Controllers
 
             return View(filterModel);
         }
+
+
+
+        // 3. TRANG XUẤT HÓA ĐƠN CHO TỪNG ĐƠN HÀNG
+        [HttpGet]
+        public IActionResult PrintInvoice(int orderId)
+        {
+            // 1. Tìm đơn hàng
+            var order = _context.Orders.FirstOrDefault(o => o.Id == orderId);
+            if (order == null) return NotFound();
+
+            // 2. Lấy thông tin khách hàng (nếu có)
+            var customer = _context.Customers.FirstOrDefault(c => c.Id == order.CustomerId);
+
+            // 3. Gom chi tiết đơn hàng và thông tin sản phẩm
+            var orderDetails = (from d in _context.OrderDetails
+                                join p in _context.Products on d.ProductId equals p.Id
+                                where d.OrderId == orderId
+                                select new ComputerInvoiceDetailViewModel
+                                {
+                                    ProductCode = p.ProductCode ?? "SP_" + p.Id,
+                                    ProductName = p.ProductName,
+                                    WarrantyMonths = 12, // Giả định bảo hành mặc định 12 tháng, nếu bảng Product có cột bảo hành bạn thay bằng p.Warranty nhé
+                                    Quantity = d.Quantity,
+                                    UnitPrice = d.UnitPrice,
+                                    TotalPrice = d.Quantity * d.UnitPrice
+                                }).ToList();
+
+            // 4. Đóng gói vào ViewModel
+            var model = new ComputerInvoiceViewModel
+            {
+                OrderId = order.Id,
+                OrderDate = order.OrderDate ?? DateTime.Now,
+                CustomerName = customer != null ? customer.FullName : "Khách lẻ",
+
+                // Ưu tiên lấy số điện thoại và địa chỉ giao hàng trực tiếp trên đơn hàng (vì khách có thể nhập địa chỉ nhận khác)
+                CustomerPhone = order.CustomerPhone ?? (customer != null ? customer.Phone : "N/A"),
+                CustomerAddress = order.ShippingAddress ?? (customer != null ? customer.Address : "N/A"),
+
+                TotalAmount = orderDetails.Sum(x => x.TotalPrice),
+                Details = orderDetails
+            };
+
+            return View(model);
+        }
     }
 }

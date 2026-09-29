@@ -101,44 +101,43 @@ namespace WebBanHang.Controllers
         }
 
         [HttpPost]
-        public IActionResult Edit(Product product, IFormFile imageFile) // Bổ sung tham số IFormFile
+        public IActionResult Edit(Product product, IFormFile imageFile)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
 
-            if (ModelState.IsValid)
+            // 1. Lấy đúng sản phẩm gốc từ CSDL lên để đối chiếu
+            var existingProduct = _context.Products.Find(product.Id);
+            if (existingProduct == null) return NotFound();
+
+            // 2. Chép toàn bộ giá trị mới từ form (bao gồm Số lượng, Tên, Giá...) đè lên dữ liệu cũ
+            // Lệnh này cực kỳ thông minh: nó tự bỏ qua các trường liên kết gây lỗi, và giữ nguyên các cột không có trong form
+            _context.Entry(existingProduct).CurrentValues.SetValues(product);
+
+            // 3. Xử lý ảnh (Chỉ khi nào Admin chọn ảnh mới thì mới lưu đè)
+            if (imageFile != null && imageFile.Length > 0)
             {
-                // Nếu người dùng có bấm chọn một file ảnh mới từ máy tính
-                if (imageFile != null && imageFile.Length > 0)
+                string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
+                if (!Directory.Exists(uploadsFolder))
                 {
-                    // Xác định thư mục lưu: wwwroot/images
-                    string uploadsFolder = Path.Combine(_webHostEnvironment.WebRootPath, "images");
-                    if (!Directory.Exists(uploadsFolder))
-                    {
-                        Directory.CreateDirectory(uploadsFolder); // Tự động tạo thư mục nếu chưa có
-                    }
-
-                    // Đổi tên file để tránh trùng lặp (dùng Guid)
-                    string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
-                    string filePath = Path.Combine(uploadsFolder, uniqueFileName);
-
-                    // Copy file từ form upload vào thư mục của project
-                    using (var fileStream = new FileStream(filePath, FileMode.Create))
-                    {
-                        imageFile.CopyTo(fileStream);
-                    }
-
-                    // Gán lại đường dẫn mới cho sản phẩm
-                    product.Picture = "/images/" + uniqueFileName;
+                    Directory.CreateDirectory(uploadsFolder);
                 }
-                // Lưu ý: Nếu người dùng không chọn ảnh mới, giá trị product.Picture vẫn được giữ nguyên nhờ thẻ hidden ở View.
 
-                _context.Products.Update(product);
-                _context.SaveChanges();
-                return RedirectToAction(nameof(Index));
+                string uniqueFileName = Guid.NewGuid().ToString() + "_" + imageFile.FileName;
+                string filePath = Path.Combine(uploadsFolder, uniqueFileName);
+
+                using (var fileStream = new FileStream(filePath, FileMode.Create))
+                {
+                    imageFile.CopyTo(fileStream);
+                }
+
+                existingProduct.Picture = "/images/" + uniqueFileName;
             }
 
-            ViewBag.CatalogId = new SelectList(_context.Catalogs, "Id", "CatalogName", product.CatalogId);
-            return View(product);
+            // 4. Cập nhật và lưu thay đổi xuống Database
+            _context.Products.Update(existingProduct);
+            _context.SaveChanges();
+
+            return RedirectToAction(nameof(Index));
         }
 
         // 4. XÓA SẢN PHẨM
