@@ -1,10 +1,9 @@
 ﻿@model IEnumerable<WebBanHang.Models.Product>
 
-<!-- Banner Chào mừng giữ nguyên -->
 @{
     ViewData["Title"] = "Trang chủ";
-}<div class="container" style="margin-top: 20px;">
 }
+
 <div class="container" style="margin-top: 20px;">
     <!-- Banner hiện tại của nhóm -->
     <div class="p-5 text-center bg-danger text-white rounded mb-4">
@@ -12,7 +11,7 @@
         <p>Khám phá các sản phẩm công nghệ và thiết bị mới nhất với giá tốt nhất.</p>
     </div>
 
-    <!-- BỔ SUNG: KHU VỰC THANH TÌM KIẾM VÀ BỘ LỌC -->
+    <!-- KHU VỰC THANH TÌM KIẾM VÀ BỘ LỌC -->
     <div class="card mb-4 shadow-sm border-0 bg-light">
         <div class="card-body">
             <form asp-controller="Home" asp-action="Index" method="get" class="row g-2 align-items-center">
@@ -39,27 +38,9 @@
     </div>
     <!-- KẾT THÚC BỘ LỌC -->
 
-<h2 class="text-center mb-4">Danh Sách Sản Phẩm</h2>
+    <h2 class="text-center mb-4">Danh Sách Sản Phẩm</h2>
 
-<!-- 1. VÒNG LẶP SẢN PHẨM -->
-<div class="row">
-    @foreach (var item in Model)
-    {
-        <!-- Dùng col-lg-3 và col-md-4 để màn máy tính hiện 4 SP, màn ipad hiện 3 SP -->
-        <div class="col-6 col-md-4 col-lg-3 mb-4">
-            <div class="card h-100 shadow-sm">
-                <img src="@item.Picture" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@item.ProductName" />
-                <div class="card-body">
-                    <h5 class="card-title text-truncate">@item.ProductName</h5>
-                    <p class="card-text text-muted mb-1">Mã SP: @(item.ProductCode ?? "SP0" + item.Id)</p>
-                    <p class="card-text text-danger fw-bold">Giá: @item.UnitPrice.ToString("N0") đ</p>
-                </div>
-                <div class="card-footer bg-white border-0 pb-3">
-                    <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary w-100">Thêm vào giỏ</a>
-                </div>
-            </div>
-        </div>
-    <!-- Kiểm tra nếu bộ lọc không tìm thấy sản phẩm -->
+    <!-- KIỂM TRA DỮ LIỆU -->
     @if (!Model.Any())
     {
         <div class="alert alert-warning text-center">
@@ -68,51 +49,56 @@
     }
     else
     {
+        <!-- VÒNG LẶP SẢN PHẨM -->
         <div class="row">
-            <!-- Vòng lặp hiển thị Card gốc của nhóm -->
             @foreach (var item in Model)
             {
-                <div class="col-md-3 mb-4">
+                <!-- Dùng col-lg-3 và col-md-4 để màn máy tính hiện 4 SP, màn ipad hiện 3 SP -->
+                <div class="col-6 col-md-4 col-lg-3 mb-4">
                     <div class="card h-100 shadow-sm">
-                        <img src="@item.Picture" class="card-img-top" alt="@item.ProductName" style="height: 200px; object-fit: cover;">
+                        <img src="@item.Picture" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@item.ProductName" />
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">@item.ProductName</h5>
-                            <p class="card-text text-muted mb-1">Mã SP: @item.ProductCode</p>
+                            <h5 class="card-title text-truncate" title="@item.ProductName">@item.ProductName</h5>
+<p class="card-text text-muted mb-1">Mã SP: @(item.ProductCode ?? "SP0" + item.Id)</p>
                             <p class="card-text text-danger fw-bold">Giá: @item.UnitPrice.ToString("N0") đ</p>
-
-                            <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary mt-auto">Thêm vào giỏ</a>
+                            
+                            <!-- mt-auto giúp đẩy nút luôn nằm ở dưới cùng của thẻ card -->
+                            <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary w-100 mt-auto">Thêm vào giỏ</a>
                         </div>
                     </div>
                 </div>
             }
         </div>
     }
-</div>
 
-<!-- 2. THANH CHUYỂN TRANG (PAGINATION) -->
-@if (ViewBag.TotalPages > 1)
-{
-    <nav aria-label="Page navigation" class="mt-5 mb-4">
-        <ul class="pagination justify-content-center">
-            
-            <!-- Nút 'Trang trước' -->
-            <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
-                <a class="page-link" href="/Home/Index?page=@(ViewBag.CurrentPage - 1)">« Trước</a>
-            </li>
+    <!-- THANH CHUYỂN TRANG (PAGINATION) -->
+    @if (ViewBag.TotalPages != null && ViewBag.TotalPages > 1)
+    {
+        <!-- Tạo biến lưu trữ tham số truy vấn hiện tại để giữ nguyên bộ lọc khi chuyển trang -->
+        var queryParams = $"&searchString={ViewBag.SearchString}&catalogId={Context.Request.Query["catalogId"]}&minPrice={ViewBag.MinPrice}&maxPrice={ViewBag.MaxPrice}";
 
-            <!-- Các số trang (1, 2, 3...) -->
-            @for (int i = 1; i <= ViewBag.TotalPages; i++)
-            {
-                <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                    <a class="page-link" href="/Home/Index?page=@i">@i</a>
+        <nav aria-label="Page navigation" class="mt-5 mb-4">
+            <ul class="pagination justify-content-center">
+                
+                <!-- Nút 'Trang trước' -->
+                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="/Home/Index?page=@(ViewBag.CurrentPage - 1)@queryParams">« Trước</a>
                 </li>
-            }
 
-            <!-- Nút 'Trang sau' -->
-            <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
-                <a class="page-link" href="/Home/Index?page=@(ViewBag.CurrentPage + 1)">Sau »</a>
-            </li>
+                <!-- Các số trang (1, 2, 3...) -->
+                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                {
+                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                        <a class="page-link" href="/Home/Index?page=@i@queryParams">@i</a>
+                    </li>
+                }
 
-        </ul>
-    </nav>
-}
+                <!-- Nút 'Trang sau' -->
+                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                    <a class="page-link" href="/Home/Index?page=@(ViewBag.CurrentPage + 1)@queryParams">Sau »</a>
+                </li>
+
+            </ul>
+        </nav>
+    }
+</div>
