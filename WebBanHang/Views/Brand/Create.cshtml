@@ -1,0 +1,25 @@
+﻿@model WebBanHang.Models.Brand
+@{
+    ViewData["Title"] = "Thêm Hãng Mới";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2>Thêm Hãng Sản Xuất</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Create">
+                <div class="form-group mb-3">
+                    <label asp-for="BrandName" class="control-label">Tên Hãng</label>
+                    <input asp-for="BrandName" class="form-control" placeholder="Ví dụ: Asus, Dell..." required />
+                    <span asp-validation-for="BrandName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Lưu dữ liệu" class="btn btn-success" />
+                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

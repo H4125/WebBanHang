@@ -1,0 +1,27 @@
+﻿@model WebBanHang.Models.Brand
+@{
+    ViewData["Title"] = "Sửa Hãng Sản Xuất";
+}
+
+<div class="container mt-4">
+    <h2>Sửa Hãng Sản Xuất</h2>
+    <hr />
+    <div class="row">
+        <div class="col-md-4">
+            <form asp-action="Edit">
+                <!-- Chú ý phải có dòng hidden này để hệ thống biết đang sửa ID nào -->
+                <input type="hidden" asp-for="Id" />
+
+                <div class="form-group mb-3">
+                    <label asp-for="BrandName" class="control-label">Tên Hãng</label>
+                    <input asp-for="BrandName" class="form-control" required />
+                    <span asp-validation-for="BrandName" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <input type="submit" value="Lưu thay đổi" class="btn btn-warning" />
+                    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

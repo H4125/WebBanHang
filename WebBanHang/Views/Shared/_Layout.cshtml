@@ -27,48 +27,44 @@
                             <a class="nav-link text-dark fw-bold" asp-area="" asp-controller="Home" asp-action="Index">Trang chủ</a>
                         </li>
 
-                                      
-                          @{
+                        @{
                             var userRole = HttpContextAccessor.HttpContext.Session.GetInt32("Role");
                             if (userRole == 1 || userRole == 2)
                             {
+                                <!-- ĐÃ CẬP NHẬT TÊN MENU Ở ĐÂY -->
                                 <li class="nav-item">
-                                    <a class="nav-link text-dark fw-bold" href="/Catalog/Index">Quản lý Danh mục</a>
+                                    <a class="nav-link text-dark fw-bold" href="/Catalog/Index">Quản lý Phân loại</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-dark fw-bold" href="/Product/Index">Quản lý Sản phẩm</a>
                                 </li>
-                             }
                             }
-                            @* <li class="nav-item">
-                            <a class="nav-link text-dark" href="/Home/Contact">Liên hệ</a>
-                            </li>
-                         *@
+                        }
+                    </ul>
 
-                     </ul>
                     <ul class="navbar-nav">
-                                        
-                    @if (userRole == 1 || userRole == 2)
-                    {
-                        <!-- Giao diện dành riêng cho Admin/Nhân viên -->
-                        <li class="nav-item">
-                            <a class="nav-link text-danger fw-bold" href="/Order/AdminManage">Quản lý/Xác nhận đơn hàng</a>
-                        </li>
+                        @if (userRole == 1 || userRole == 2)
+                        {
+                            <!-- Giao diện dành riêng cho Admin/Nhân viên -->
+                            <li class="nav-item">
+                                <a class="nav-link text-danger fw-bold" href="/Order/AdminManage">Quản lý/Xác nhận đơn hàng</a>
+                            </li>
 
-                        <li class="nav-item">
-                            <a class="nav-link text-danger fw-bold" href="/Report/Index">Thống kê doanh thu</a>
-                        </li>
-                    }
-                    else
-                    {
-                        <!-- Giao diện dành cho Khách hàng (Role khác 1, 2 hoặc chưa đăng nhập) -->
-                        <li class="nav-item">
-                            <a class="nav-link text-dark fw-bold " href="/Cart/Index">Giỏ hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark fw-bold" href="/Order/MyOrders">Lịch sử đơn hàng</a>
-                        </li>
-}
+                            <li class="nav-item">
+                                <a class="nav-link text-danger fw-bold" href="/Report/Index">Thống kê doanh thu</a>
+                            </li>
+                        }
+                        else
+                        {
+                            <!-- Giao diện dành cho Khách hàng (Role khác 1, 2 hoặc chưa đăng nhập) -->
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-bold " href="/Cart/Index">Giỏ hàng</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link text-dark fw-bold" href="/Order/MyOrders">Lịch sử đơn hàng</a>
+                            </li>
+                        }
+
                         @{
                             var username = HttpContextAccessor.HttpContext.Session.GetString("Username");
                             if (username != null)
@@ -91,11 +87,12 @@
                             }
                         }
                     </ul>
-                    
+
                 </div>
             </div>
         </nav>
     </header>
+
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
@@ -104,7 +101,7 @@
 
     <footer class="border-top footer text-muted">
         <div class="container">
-            &copy; 2026 - Shop bán máy tính 
+            &copy; 2026 - Shop bán máy tính
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

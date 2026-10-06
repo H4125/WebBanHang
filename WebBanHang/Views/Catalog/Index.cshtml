@@ -1,13 +1,32 @@
 ﻿@model IEnumerable<WebBanHang.Models.Catalog>
 @{
-    ViewData["Title"] = "Quản lý Danh mục";
+    ViewData["Title"] = "Quản lý Phân loại";
 }
 
 <div class="container mt-4">
-    <h2>Quản lý Danh mục</h2>
-    <p>
-        <a asp-action="Create" class="btn btn-primary">Thêm danh mục mới</a>
-    </p>
+    <h2 class="mb-4">Quản Lý Phân Loại Sản Phẩm</h2>
+
+    <!-- THANH ĐIỀU HƯỚNG TABS -->
+    <ul class="nav nav-tabs mb-4">
+        <li class="nav-item">
+            <!-- Đang ở trang Catalog nên tab này sáng lên (active) -->
+            <a class="nav-link active fw-bold" asp-controller="Catalog" asp-action="Index">
+                Loại thiết bị (Danh mục)
+            </a>
+        </li>
+        <li class="nav-item">
+            <!-- Link trỏ sang trang Quản lý Hãng -->
+            <a class="nav-link text-secondary" asp-controller="Brand" asp-action="Index">
+                Hãng sản xuất
+            </a>
+        </li>
+    </ul>
+
+    <!-- KHU VỰC NỘI DUNG -->
+    <div class="mb-3">
+        <a asp-action="Create" class="btn btn-primary">+ Thêm danh mục mới</a>
+    </div>
+
     <table class="table table-bordered table-hover">
         <thead class="table-dark">
             <tr>
