@@ -28,14 +28,19 @@ namespace WebBanHang.Controllers
             return role == 1 || role == 2;
         }
 
-        // 1. DANH SÁCH & TÌM KIẾM
-        public IActionResult Index(string searchString, int? catalogId, decimal? minPrice, decimal? maxPrice)
+        // 1. DANH SÁCH & TÌM KIẾM (Đã cập nhật thêm tham số brandId)
+        public IActionResult Index(string searchString, int? catalogId, int? brandId, decimal? minPrice, decimal? maxPrice)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
 
+            // Nạp danh sách Danh mục và Hãng sản xuất lên View
             ViewBag.CatalogList = new SelectList(_context.Catalogs, "Id", "CatalogName", catalogId);
+            ViewBag.BrandList = new SelectList(_context.Brands, "Id", "BrandName", brandId);
 
-            var products = _context.Products.Include(p => p.Catalog).AsQueryable();
+            var products = _context.Products
+                                   .Include(p => p.Catalog)
+                                   .Include(p => p.Brand) // Bổ sung Include bảng Brand
+                                   .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -47,6 +52,12 @@ namespace WebBanHang.Controllers
                 products = products.Where(p => p.CatalogId == catalogId.Value);
             }
 
+            // Bổ sung điều kiện lọc theo Hãng
+            if (brandId.HasValue)
+            {
+                products = products.Where(p => p.BrandId == brandId.Value);
+            }
+
             if (minPrice.HasValue)
             {
                 products = products.Where(p => p.UnitPrice >= minPrice.Value);
@@ -56,16 +67,21 @@ namespace WebBanHang.Controllers
                 products = products.Where(p => p.UnitPrice <= maxPrice.Value);
             }
 
+            // Giữ lại trạng thái trên giao diện
             ViewBag.SearchString = searchString;
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
+            ViewBag.BrandId = brandId;
 
             return View(products.ToList());
         }
 
         public IActionResult Details(int id)
         {
-            var product = _context.Products.Include(p => p.Catalog).FirstOrDefault(x => x.Id == id);
+            var product = _context.Products
+                                  .Include(p => p.Catalog)
+                                  .Include(p => p.Brand)
+                                  .FirstOrDefault(x => x.Id == id);
             if (product == null) return NotFound();
             return View(product);
         }
@@ -75,7 +91,11 @@ namespace WebBanHang.Controllers
         public IActionResult Create()
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
             ViewBag.CatalogId = new SelectList(_context.Catalogs, "Id", "CatalogName");
+            // Thêm danh sách hãng vào giao diện thêm mới
+            ViewBag.BrandId = new SelectList(_context.Brands, "Id", "BrandName");
+
             return View();
         }
 
@@ -111,6 +131,7 @@ namespace WebBanHang.Controllers
             }
 
             ViewBag.CatalogId = new SelectList(_context.Catalogs, "Id", "CatalogName", product.CatalogId);
+            ViewBag.BrandId = new SelectList(_context.Brands, "Id", "BrandName", product.BrandId);
             return View(product);
         }
 
@@ -124,6 +145,8 @@ namespace WebBanHang.Controllers
             if (product == null) return NotFound();
 
             ViewBag.CatalogId = new SelectList(_context.Catalogs, "Id", "CatalogName", product.CatalogId);
+            // Thêm danh sách hãng vào giao diện sửa
+            ViewBag.BrandId = new SelectList(_context.Brands, "Id", "BrandName", product.BrandId);
             return View(product);
         }
 

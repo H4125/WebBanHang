@@ -22,4 +22,8 @@ public partial class Product
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
 
     public int Quantity { get; set; }
+
+    public int? BrandId { get; set; }
+
+    public virtual Brand Brand { get; set; }
 }
