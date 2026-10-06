@@ -16,16 +16,20 @@ namespace WebBanHang.Controllers
             _context = context;
         }
 
-        // ĐÃ GỘP CHUNG TẤT CẢ THAM SỐ TÌM KIẾM VÀ PHÂN TRANG VÀO 1 HÀM DUY NHẤT
-        public IActionResult Index(string searchString, int? catalogId, decimal? minPrice, decimal? maxPrice, int page = 1)
+        // BỔ SUNG THÊM THAM SỐ brandId VÀO HÀM
+        public IActionResult Index(string searchString, int? catalogId, int? brandId, decimal? minPrice, decimal? maxPrice, int page = 1)
         {
             int pageSize = 12; // 12 sản phẩm 1 trang
 
-            // Đổ dữ liệu Danh mục ra Dropdown list
+            // Đổ dữ liệu Danh mục và Hãng ra Dropdown list
             ViewBag.CatalogList = new SelectList(_context.Catalogs, "Id", "CatalogName", catalogId);
+            ViewBag.BrandList = new SelectList(_context.Brands, "Id", "BrandName", brandId);
 
-            // 1. Khởi tạo truy vấn
-            var products = _context.Products.Include(p => p.Catalog).AsQueryable();
+            // 1. Khởi tạo truy vấn (Bổ sung Include(p => p.Brand))
+            var products = _context.Products
+                                   .Include(p => p.Catalog)
+                                   .Include(p => p.Brand)
+                                   .AsQueryable();
 
             // 2. Xử lý các điều kiện lọc
             if (!string.IsNullOrEmpty(searchString))
@@ -36,6 +40,12 @@ namespace WebBanHang.Controllers
             if (catalogId.HasValue)
             {
                 products = products.Where(p => p.CatalogId == catalogId.Value);
+            }
+
+            // BỘ LỌC THEO HÃNG SẢN XUẤT
+            if (brandId.HasValue)
+            {
+                products = products.Where(p => p.BrandId == brandId.Value);
             }
 
             if (minPrice.HasValue)
@@ -62,6 +72,7 @@ namespace WebBanHang.Controllers
             ViewBag.SearchString = searchString;
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
+            ViewBag.BrandId = brandId; // Lưu trạng thái Hãng đang chọn
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = totalPages;
 
