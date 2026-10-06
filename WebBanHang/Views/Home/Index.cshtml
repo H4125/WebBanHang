@@ -4,10 +4,40 @@
 @{
     ViewData["Title"] = "Trang chủ";
 }<div class="container" style="margin-top: 20px;">
+}
+<div class="container" style="margin-top: 20px;">
+    <!-- Banner hiện tại của nhóm -->
     <div class="p-5 text-center bg-danger text-white rounded mb-4">
         <h1>Chào mừng đến với cửa hàng của chúng tôi!</h1>
         <p>Khám phá các sản phẩm công nghệ và thiết bị mới nhất với giá tốt nhất.</p>
     </div>
+
+    <!-- BỔ SUNG: KHU VỰC THANH TÌM KIẾM VÀ BỘ LỌC -->
+    <div class="card mb-4 shadow-sm border-0 bg-light">
+        <div class="card-body">
+            <form asp-controller="Home" asp-action="Index" method="get" class="row g-2 align-items-center">
+                <div class="col-md-3">
+                    <input type="text" name="searchString" class="form-control" placeholder="Tìm tên sản phẩm..." value="@ViewBag.SearchString" />
+                </div>
+                <div class="col-md-3">
+                    <select name="catalogId" class="form-select" asp-items="@ViewBag.CatalogList">
+                        <option value="">-- Tất cả danh mục --</option>
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="minPrice" class="form-control" placeholder="Giá từ..." value="@ViewBag.MinPrice" />
+                </div>
+                <div class="col-md-2">
+                    <input type="number" name="maxPrice" class="form-control" placeholder="Đến giá..." value="@ViewBag.MaxPrice" />
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary w-100">Tìm kiếm</button>
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Xóa lọc</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    <!-- KẾT THÚC BỘ LỌC -->
 
 <h2 class="text-center mb-4">Danh Sách Sản Phẩm</h2>
 
@@ -28,6 +58,33 @@
                     <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary w-100">Thêm vào giỏ</a>
                 </div>
             </div>
+        </div>
+    <!-- Kiểm tra nếu bộ lọc không tìm thấy sản phẩm -->
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center">
+            Không tìm thấy sản phẩm nào phù hợp với điều kiện tìm kiếm của bạn.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            <!-- Vòng lặp hiển thị Card gốc của nhóm -->
+            @foreach (var item in Model)
+            {
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100 shadow-sm">
+                        <img src="@item.Picture" class="card-img-top" alt="@item.ProductName" style="height: 200px; object-fit: cover;">
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@item.ProductName</h5>
+                            <p class="card-text text-muted mb-1">Mã SP: @item.ProductCode</p>
+                            <p class="card-text text-danger fw-bold">Giá: @item.UnitPrice.ToString("N0") đ</p>
+
+                            <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary mt-auto">Thêm vào giỏ</a>
+                        </div>
+                    </div>
+                </div>
+            }
         </div>
     }
 </div>

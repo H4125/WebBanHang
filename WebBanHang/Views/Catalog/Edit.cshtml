@@ -1,14 +1,16 @@
 ﻿@model WebBanHang.Models.Catalog
 @{
-    ViewData["Title"] = "Thêm Danh Mục";
+    ViewData["Title"] = "Sửa Danh Mục";
 }
 
 <div class="container mt-4">
-    <h2>Thêm Danh Mục Mới</h2>
+    <h2>Cập nhật Danh Mục</h2>
     <hr />
     <div class="row">
         <div class="col-md-6">
-            <form asp-action="Create" method="post">
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+
                 <div class="mb-3">
                     <label asp-for="CatalogCode" class="form-label">Mã danh mục:</label>
                     <input asp-for="CatalogCode" class="form-control" required />
@@ -17,7 +19,7 @@
                     <label asp-for="CatalogName" class="form-label">Tên danh mục:</label>
                     <input asp-for="CatalogName" class="form-control" required />
                 </div>
-                <button type="submit" class="btn btn-success">Lưu lại</button>
+                <button type="submit" class="btn btn-success">Cập nhật</button>
                 <a asp-action="Index" class="btn btn-secondary">Quay về</a>
             </form>
         </div>

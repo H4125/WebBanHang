@@ -1,0 +1,32 @@
+﻿@model IEnumerable<WebBanHang.Models.Product>
+@{
+    ViewData["Title"] = "Sản phẩm theo danh mục";
+}
+
+<div class="container mt-4">
+    <h2>Sản phẩm thuộc danh mục</h2>
+    <p>
+        <a asp-controller="Catalog" asp-action="Index" class="btn btn-secondary">Quay lại danh mục</a>
+    </p>
+    <table class="table table-bordered">
+        <thead class="table-dark">
+            <tr>
+                <th>Hình ảnh</th>
+                <th>Mã SP</th>
+                <th>Tên SP</th>
+                <th>Đơn giá</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td><img src="@item.Picture" width="80" height="80" style="object-fit:cover" /></td>
+                    <td>@item.ProductCode</td>
+                    <td>@item.ProductName</td>
+                    <td>@String.Format("{0:N0} VNĐ", item.UnitPrice)</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
