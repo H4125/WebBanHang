@@ -29,17 +29,18 @@ namespace WebBanHang.Controllers
         }
 
         // 1. DANH SÁCH & TÌM KIẾM (Đã cập nhật thêm tham số brandId)
-        public IActionResult Index(string searchString, int? catalogId, int? brandId, decimal? minPrice, decimal? maxPrice)
+        // 1. DANH SÁCH & TÌM KIẾM (Đã cập nhật dùng List để lọc Checkbox)
+        public IActionResult Index(string searchString, List<int> catalogIds, List<int> brandIds, decimal? minPrice, decimal? maxPrice)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
 
-            // Nạp danh sách Danh mục và Hãng sản xuất lên View
-            ViewBag.CatalogList = new SelectList(_context.Catalogs, "Id", "CatalogName", catalogId);
-            ViewBag.BrandList = new SelectList(_context.Brands, "Id", "BrandName", brandId);
+            // Nạp toàn bộ danh sách Danh mục và Hãng lên View để vẽ Checkbox
+            ViewBag.Catalogs = _context.Catalogs.ToList();
+            ViewBag.Brands = _context.Brands.ToList();
 
             var products = _context.Products
                                    .Include(p => p.Catalog)
-                                   .Include(p => p.Brand) // Bổ sung Include bảng Brand
+                                   .Include(p => p.Brand)
                                    .AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -47,15 +48,16 @@ namespace WebBanHang.Controllers
                 products = products.Where(p => p.ProductName.Contains(searchString) || p.ProductCode.Contains(searchString));
             }
 
-            if (catalogId.HasValue)
+            // Lọc theo nhiều Danh mục (dùng Contains)
+            if (catalogIds != null && catalogIds.Count > 0)
             {
-                products = products.Where(p => p.CatalogId == catalogId.Value);
+                products = products.Where(p => p.CatalogId.HasValue && catalogIds.Contains(p.CatalogId.Value));
             }
 
-            // Bổ sung điều kiện lọc theo Hãng
-            if (brandId.HasValue)
+            // Lọc theo nhiều Hãng (dùng Contains)
+            if (brandIds != null && brandIds.Count > 0)
             {
-                products = products.Where(p => p.BrandId == brandId.Value);
+                products = products.Where(p => p.BrandId.HasValue && brandIds.Contains(p.BrandId.Value));
             }
 
             if (minPrice.HasValue)
@@ -71,7 +73,10 @@ namespace WebBanHang.Controllers
             ViewBag.SearchString = searchString;
             ViewBag.MinPrice = minPrice;
             ViewBag.MaxPrice = maxPrice;
-            ViewBag.BrandId = brandId;
+
+            // Lưu lại danh sách các ID đã tick
+            ViewBag.SelectedCatalogs = catalogIds ?? new List<int>();
+            ViewBag.SelectedBrands = brandIds ?? new List<int>();
 
             return View(products.ToList());
         }

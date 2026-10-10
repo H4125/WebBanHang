@@ -5,38 +5,133 @@
 
 <div class="container mt-4">
     <h2>Quản lý Sản Phẩm</h2>
+
     <div class="mb-3">
         <a asp-action="Create" class="btn btn-primary">Thêm sản phẩm mới</a>
         
     </div>
 
-    <table class="table table-bordered table-hover">
+    <!-- KHU VỰC BỘ LỌC TÌM KIẾM (Đã chuyển sang Checkbox) -->
+    <div class="card mb-4">
+        <div class="card-header bg-light">
+            <strong>Bộ lọc tìm kiếm đa tiêu chí</strong>
+        </div>
+        <div class="card-body">
+            <form asp-action="Index" method="get">
+                <!-- Lọc theo Tên và Giá -->
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tìm kiếm (Tên/Mã SP):</label>
+                        <input type="text" name="searchString" class="form-control" value="@ViewBag.SearchString" placeholder="Nhập từ khóa..." />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Giá từ:</label>
+                        <input type="number" name="minPrice" class="form-control" value="@ViewBag.MinPrice" placeholder="Ví dụ: 1000000" />
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Đến giá:</label>
+                        <input type="number" name="maxPrice" class="form-control" value="@ViewBag.MaxPrice" placeholder="Ví dụ: 20000000" />
+                    </div>
+                </div>
+
+                <!-- Lọc theo Danh mục & Hãng (Dạng Checkbox) -->
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Danh mục:</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @if (ViewBag.Catalogs != null)
+                            {
+                                foreach (var cat in ViewBag.Catalogs)
+                                {
+                                    bool isChecked = ViewBag.SelectedCatalogs != null && ((List<int>)ViewBag.SelectedCatalogs).Contains(cat.Id);
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="catalogIds" value="@cat.Id" id="cat_@cat.Id" @(isChecked ? "checked" : "") />
+                                        <label class="form-check-label" for="cat_@cat.Id">@cat.CatalogName</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-bold">Hãng sản xuất:</label>
+                        <div class="d-flex flex-wrap gap-3">
+                            @if (ViewBag.Brands != null)
+                            {
+                                foreach (var brand in ViewBag.Brands)
+                                {
+                                    bool isChecked = ViewBag.SelectedBrands != null && ((List<int>)ViewBag.SelectedBrands).Contains(brand.Id);
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="brandIds" value="@brand.Id" id="brand_@brand.Id" @(isChecked ? "checked" : "") />
+                                        <label class="form-check-label" for="brand_@brand.Id">@brand.BrandName</label>
+                                    </div>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nút Submit -->
+                <div>
+                    <button type="submit" class="btn btn-success">Lọc sản phẩm</button>
+                    <a asp-action="Index" class="btn btn-secondary">Xóa bộ lọc</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- KHU VỰC BẢNG HIỂN THỊ DỮ LIỆU -->
+    <table class="table table-bordered table-hover align-middle">
         <thead class="table-dark">
             <tr>
-                <th>Ảnh</th>
+                <th class="text-center">Ảnh</th>
                 <th>Mã SP</th>
                 <th>Tên SP</th>
                 <th>Danh mục</th>
-                <th>Đơn giá</th>
-                <th>Tồn kho</th>
-                <th>Hành động</th>
+                <th>Hãng</th> <!-- Bổ sung cột Hãng -->
+                <th class="text-end">Đơn giá</th>
+                <th class="text-center">Tồn kho</th>
+                <th class="text-center">Hành động</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var item in Model)
+            @if (Model != null && Model.Any())
+            {
+                foreach (var item in Model)
+                {
+                    <tr>
+                        <td class="text-center">
+                            <img src="@item.Picture" alt="Ảnh SP" width="60" height="60" class="rounded shadow-sm" style="object-fit:cover" />
+                        </td>
+                        <td><span class="badge bg-secondary">@item.ProductCode</span></td>
+                        <td class="fw-bold">@item.ProductName</td>
+                        <td>@(item.Catalog != null ? item.Catalog.CatalogName : "N/A")</td>
+
+                        <!-- Hiển thị tên Hãng -->
+                        <td>@(item.Brand != null ? item.Brand.BrandName : "N/A")</td>
+
+                        <td class="text-end text-danger fw-bold">@String.Format("{0:N0}", item.UnitPrice) đ</td>
+                        <td class="text-center">
+                            @if (item.Quantity > 0)
+                            {
+                                <span class="badge bg-success">@item.Quantity</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Hết hàng</span>
+                            }
+                        </td>
+                        <td class="text-center">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Chi tiết</a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Sửa</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này không?');">Xóa</a>
+                        </td>
+                    </tr>
+                }
+            }
+            else
             {
                 <tr>
-                    <td><img src="@item.Picture" alt="Ảnh SP" width="60" height="60" style="object-fit:cover" /></td>
-                    <td>@item.ProductCode</td>
-                    <td>@item.ProductName</td>
-                    <td>@(item.Catalog != null ? item.Catalog.CatalogName : "N/A")</td>
-                    <td>@String.Format("{0:N0}", item.UnitPrice) đ</td>
-                    <td>@item.Quantity</td>
-                    <td>
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-info btn-sm">Chi tiết</a>
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-warning btn-sm">Sửa</a>
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-danger btn-sm" onclick="return confirm('Xóa sản phẩm này?');">Xóa</a>
-                    </td>
+                    <td colspan="8" class="text-center text-muted py-4">Không tìm thấy sản phẩm nào phù hợp với điều kiện lọc.</td>
                 </tr>
             }
         </tbody>
