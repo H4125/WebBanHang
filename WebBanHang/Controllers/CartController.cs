@@ -87,36 +87,36 @@ namespace WebBanHang.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // --- TÍNH NĂNG MỚI: Cập nhật AJAX (Đã sửa cú pháp Core) ---
-        [HttpPost]
-        public JsonResult UpdateQuantityAjax(int id, int quantity)
-        {
-            var cart = GetCartItems();
-            var item = cart.FirstOrDefault(x => x.ProductId == id);
-            var product = _context.Products.Find(id);
+        //// --- TÍNH NĂNG MỚI: Cập nhật AJAX (Đã sửa cú pháp Core) ---
+        //[HttpPost]
+        //public JsonResult UpdateQuantityAjax(int id, int quantity)
+        //{
+        //    var cart = GetCartItems();
+        //    var item = cart.FirstOrDefault(x => x.ProductId == id);
+        //    var product = _context.Products.Find(id);
 
-            if (item != null && product != null)
-            {
-                // Kiểm tra tồn kho trước khi cập nhật bằng AJAX
-                if (quantity > product.Quantity)
-                {
-                    return Json(new { Success = false, Message = $"Chỉ còn {product.Quantity} sản phẩm trong kho." });
-                }
-                item.Quantity = quantity > 0 ? quantity : 1;
-                HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
-            }
+        //    if (item != null && product != null)
+        //    {
+        //        // Kiểm tra tồn kho trước khi cập nhật bằng AJAX
+        //        if (quantity > product.Quantity)
+        //        {
+        //            return Json(new { Success = false, Message = $"Chỉ còn {product.Quantity} sản phẩm trong kho." });
+        //        }
+        //        item.Quantity = quantity > 0 ? quantity : 1;
+        //        HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
+        //    }
 
-            var totalAmount = cart.Sum(x => x.TotalPrice);
-            var totalQuantity = cart.Sum(x => x.Quantity);
+        //    var totalAmount = cart.Sum(x => x.TotalPrice);
+        //    var totalQuantity = cart.Sum(x => x.Quantity);
 
-            return Json(new
-            {
-                Success = true,
-                ItemTotalStr = string.Format("{0:0,0} VNĐ", item?.TotalPrice ?? 0),
-                TotalAmountStr = string.Format("{0:0,0} VNĐ", totalAmount),
-                TotalQuantity = totalQuantity
-            });
-        }
+        //    return Json(new
+        //    {
+        //        Success = true,
+        //        ItemTotalStr = string.Format("{0:0,0} VNĐ", item?.TotalPrice ?? 0),
+        //        TotalAmountStr = string.Format("{0:0,0} VNĐ", totalAmount),
+        //        TotalQuantity = totalQuantity
+        //    });
+        //}
 
 
         [HttpPost]
@@ -141,30 +141,30 @@ namespace WebBanHang.Controllers
             return RedirectToAction("Index");
         }
 
-        // --- TÍNH NĂNG MỚI: Xóa AJAX ---
-        [HttpPost]
-        public JsonResult RemoveItemAjax(int id)
-        {
-            var cart = GetCartItems();
-            var item = cart.FirstOrDefault(x => x.ProductId == id);
+        //// --- TÍNH NĂNG MỚI: Xóa AJAX ---
+        //[HttpPost]
+        //public JsonResult RemoveItemAjax(int id)
+        //{
+        //    var cart = GetCartItems();
+        //    var item = cart.FirstOrDefault(x => x.ProductId == id);
 
-            if (item != null)
-            {
-                cart.Remove(item);
-                HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
-            }
+        //    if (item != null)
+        //    {
+        //        cart.Remove(item);
+        //        HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
+        //    }
 
-            var totalAmount = cart.Sum(x => x.TotalPrice);
-            var totalQuantity = cart.Sum(x => x.Quantity);
+        //    var totalAmount = cart.Sum(x => x.TotalPrice);
+        //    var totalQuantity = cart.Sum(x => x.Quantity);
 
-            return Json(new
-            {
-                Success = true,
-                TotalAmountStr = string.Format("{0:0,0} VNĐ", totalAmount),
-                TotalQuantity = totalQuantity,
-                CartEmpty = cart.Count == 0
-            });
-        }
+        //    return Json(new
+        //    {
+        //        Success = true,
+        //        TotalAmountStr = string.Format("{0:0,0} VNĐ", totalAmount),
+        //        TotalQuantity = totalQuantity,
+        //        CartEmpty = cart.Count == 0
+        //    });
+        //}
 
         public IActionResult Checkout()
         {
@@ -295,6 +295,29 @@ namespace WebBanHang.Controllers
                 }
             }
             return RedirectToAction("Index", "Home");
+        }
+
+
+        // --- XÓA SẢN PHẨM KHỎI GIỎ HÀNG ---
+        public IActionResult RemoveCart(int productId)
+        {
+            // 1. Lấy giỏ hàng hiện tại từ Session
+            var cart = GetCartItems();
+
+            // 2. Tìm sản phẩm khách hàng muốn xóa
+            var item = cart.FirstOrDefault(x => x.ProductId == productId);
+
+            if (item != null)
+            {
+                // 3. Xóa sản phẩm khỏi danh sách
+                cart.Remove(item);
+
+                // 4. Lưu giỏ hàng mới (đã xóa sản phẩm) đè lên giỏ hàng cũ trong Session
+                HttpContext.Session.SetObjectAsJson(CART_KEY, cart);
+            }
+
+            // 5. Trả khách hàng về lại trang Giỏ hàng để xem kết quả
+            return RedirectToAction(nameof(Index));
         }
     }
 }

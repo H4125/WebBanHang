@@ -65,63 +65,58 @@
     }
     else
     {
-        <!-- VÒNG LẶP SẢN PHẨM -->
-        <div class="row">
-            @foreach (var item in Model)
-            {
-                <!-- Dùng col-lg-3 và col-md-4 để màn máy tính hiện 4 SP, màn ipad hiện 3 SP -->
-                <div class="col-6 col-md-4 col-lg-3 mb-4">
-                    <div class="card h-100 shadow-sm">
-                        <img src="@item.Picture" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@item.ProductName" />
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title text-truncate" title="@item.ProductName">@item.ProductName</h5>
-                            <p class="card-text text-muted mb-1">Mã SP: @(item.ProductCode ?? "SP0" + item.Id)</p>
+        <!-- VÒNG LẶP SẢN PHẨM THEO DANH MỤC (GIAO DIỆN CHUYÊN NGHIỆP) -->
+        @foreach (var group in Model.GroupBy(p => p.Catalog))
+        {
+            // Lấy tên và ID danh mục để tạo đường dẫn
+            string catalogName = group.Key != null ? group.Key.CatalogName : "Khác";
+            int? currentCatalogId = group.Key != null ? group.Key.Id : null;
 
-                            <!-- Bổ sung hiển thị tên Hãng ở thẻ Card nếu cần -->
-                            @if (item.Brand != null)
-                            {
-                                <p class="card-text text-info mb-1" style="font-size: 0.9em;">Hãng: @item.Brand.BrandName</p>
-                            }
+            <!-- Khu vực Tiêu đề Danh mục và Nút Xem tất cả -->
+            <div class="d-flex justify-content-between align-items-end mt-5 mb-3 border-bottom pb-2">
+                <h3 class="text-uppercase text-primary fw-bold mb-0">@catalogName</h3>
+                
+                @if (currentCatalogId != null)
+                {
+                    <a href="/Home/Index?catalogId=@currentCatalogId" class="text-decoration-none fw-bold text-danger">Xem tất cả @catalogName »</a>
+                }
+            </div>
 
-                            <p class="card-text text-danger fw-bold">Giá: @item.UnitPrice.ToString("N0") đ</p>
+            <div class="row">
+                <!-- Lệnh Take(4) giúp chỉ hiển thị TỐI ĐA 4 sản phẩm mới nhất của mỗi danh mục ở Trang chủ -->
+                @foreach (var item in group.Take(4))
+                {
+                    <div class="col-6 col-md-4 col-lg-3 mb-4">
+                        <div class="card h-100 shadow-sm">
+                            <img src="@item.Picture" class="card-img-top" style="height: 200px; object-fit: cover;" alt="@item.ProductName" />
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title text-truncate" title="@item.ProductName">@item.ProductName</h5>
+                                <p class="card-text text-muted mb-1">Mã SP: @(item.ProductCode ?? "SP0" + item.Id)</p>
 
-                            <!-- mt-auto giúp đẩy nút luôn nằm ở dưới cùng của thẻ card -->
-                            <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary w-100 mt-auto">Thêm vào giỏ</a>
+                                <!-- Nếu có Hãng -->
+                                @if (item.Brand != null)
+                                {
+                                    <p class="card-text text-info mb-1" style="font-size: 0.9em;">Hãng: @item.Brand.BrandName</p>
+                                }
+
+                                <!-- Số lượng -->
+                                @if (item.Quantity > 0)
+                                {
+                                    <p class="card-text text-secondary mb-1" style="font-size: 0.9em;">Số lượng: @item.Quantity</p>
+                                }
+                                else
+                                {
+                                    <p class="card-text text-danger fw-bold mb-1" style="font-size: 0.9em;">Hết hàng</p>
+                                }
+
+                                <p class="card-text text-danger fw-bold mt-2">Giá: @item.UnitPrice.ToString("N0") đ</p>
+
+                                <a href="/Cart/AddToCart?productId=@item.Id" class="btn btn-primary w-100 mt-auto">Thêm vào giỏ</a>
+                            </div>
                         </div>
                     </div>
-                </div>
-            }
-        </div>
-    }
-
-    <!-- THANH CHUYỂN TRANG (PAGINATION) -->
-    @if (ViewBag.TotalPages != null && ViewBag.TotalPages > 1)
-    {
-        <!-- MỚI THÊM: Biến brandId vào URL phân trang để nhớ trạng thái lọc -->
-        var queryParams = $"&searchString={ViewBag.SearchString}&catalogId={Context.Request.Query["catalogId"]}&brandId={ViewBag.BrandId}&minPrice={ViewBag.MinPrice}&maxPrice={ViewBag.MaxPrice}";
-
-        <nav aria-label="Page navigation" class="mt-5 mb-4">
-            <ul class="pagination justify-content-center">
-
-                <!-- Nút 'Trang trước' -->
-                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
-                    <a class="page-link" href="/Home/Index?page=@(ViewBag.CurrentPage - 1)@queryParams">« Trước</a>
-                </li>
-
-                <!-- Các số trang (1, 2, 3...) -->
-                @for (int i = 1; i <= ViewBag.TotalPages; i++)
-                {
-                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                        <a class="page-link" href="/Home/Index?page=@i@queryParams">@i</a>
-                    </li>
                 }
-
-                <!-- Nút 'Trang sau' -->
-                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
-                    <a class="page-link" href="/Home/Index?page=@(ViewBag.CurrentPage + 1)@queryParams">Sau »</a>
-                </li>
-
-            </ul>
-        </nav>
+            </div>
+        }
     }
 </div>
