@@ -1,7 +1,6 @@
 ﻿@model WebBanHang.Models.Brand
 @{
     ViewData["Title"] = "Thêm Hãng Mới";
-    Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
 <div class="container mt-4">
@@ -9,7 +8,7 @@
     <hr />
     <div class="row">
         <div class="col-md-4">
-            <form asp-action="Create">
+            <form asp-action="Create" method ="post">
                 <div class="form-group mb-3">
                     <label asp-for="BrandName" class="control-label">Tên Hãng</label>
                     <input asp-for="BrandName" class="form-control" placeholder="Ví dụ: Asus, Dell..." required />

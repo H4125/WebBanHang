@@ -1,0 +1,62 @@
+﻿@model IEnumerable<WebBanHang.Models.Account>
+
+@{
+    ViewData["Title"] = "Quản lý phân quyền";
+}
+
+<div class="container mt-4">
+    <h2 class="text-danger mb-4">Quản Lý Phân Quyền Tài Khoản</h2>
+    <hr />
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <table class="table table-bordered table-hover align-middle">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center">ID</th>
+                        <th>Tên Đăng Nhập</th>
+                        <th class="text-center">Vai Trò Hiện Tại</th>
+                        <th class="text-center">Thiết Lập Quyền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td class="text-center fw-bold">@item.Id</td>
+                            <td>@item.Username</td>
+                            <td class="text-center">
+                                @if (item.Role == 1)
+                                {
+                                    <span class="badge bg-danger">Super Admin (1)</span>
+                                }
+                                else if (item.Role == 2)
+                                {
+                                    <span class="badge bg-primary">Manager (2)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Staff/Customer (3)</span>
+                                }
+                            </td>
+                            <td>
+                                <!-- Form cập nhật quyền cho từng người -->
+                                <form asp-action="UpdateRole" asp-controller="Account" method="post" class="d-flex justify-content-center gap-2">
+                                    <input type="hidden" name="accountId" value="@item.Id" />
+                                    
+                                    <select name="newRole" class="form-select form-select-sm" style="width: 200px;">
+                                        <option value="1" selected="@(item.Role == 1)">1 - Super Admin</option>
+                                        <option value="2" selected="@(item.Role == 2)">2 - Manager</option>
+                                        <option value="3" selected="@(item.Role == 3)">3 - Staff / Customer</option>
+                                    </select>
+                                    
+                                    <button type="submit" class="btn btn-sm btn-success">Lưu</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

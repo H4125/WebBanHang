@@ -109,6 +109,9 @@ namespace WebBanHang.Controllers
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
 
+            ModelState.Remove("Brand");
+            ModelState.Remove("Catalog");
+
             if (ModelState.IsValid)
             {
                 if (imageFile != null && imageFile.Length > 0)
@@ -159,6 +162,9 @@ namespace WebBanHang.Controllers
         public IActionResult Edit(int id, Product product, IFormFile imageFile)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
+
+            ModelState.Remove("Brand");
+            ModelState.Remove("Catalog");
 
             var existingProduct = _context.Products.Find(id);
             if (existingProduct == null) return NotFound();

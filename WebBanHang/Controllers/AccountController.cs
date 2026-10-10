@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using WebBanHang.Models;
 using System.Linq;
+using WebBanHang.Helpers; // KHÔNG THỂ THIẾU: Khai báo để dùng [CustomAuthorize]
 
 namespace WebBanHang.Controllers
 {
@@ -24,14 +25,12 @@ namespace WebBanHang.Controllers
         [HttpPost]
         public IActionResult Register(string username, string password, string fullname, string email, string phone, string address)
         {
-            // Kiểm tra xem tên đăng nhập đã tồn tại chưa
             if (_context.Accounts.Any(a => a.Username == username))
             {
                 ViewBag.Error = "Tên đăng nhập đã tồn tại!";
                 return View();
             }
 
-            // Lưu tài khoản vào bảng Account với Role = 3 (Khách hàng)
             var account = new Account
             {
                 Username = username,
@@ -39,9 +38,8 @@ namespace WebBanHang.Controllers
                 Role = 3
             };
             _context.Accounts.Add(account);
-            _context.SaveChanges(); // Lưu để lấy được Id của Account
+            _context.SaveChanges();
 
-            // Lưu thông tin khách hàng vào bảng Customer
             var customer = new Customer
             {
                 FullName = fullname,
@@ -53,7 +51,6 @@ namespace WebBanHang.Controllers
             _context.Customers.Add(customer);
             _context.SaveChanges();
 
-            // Đăng ký xong chuyển hướng về trang Đăng nhập
             return RedirectToAction("Login");
         }
 
@@ -67,11 +64,9 @@ namespace WebBanHang.Controllers
         [HttpPost]
         public IActionResult Login(string username, string password)
         {
-            // Tìm tài khoản khớp username và password
             var acc = _context.Accounts.FirstOrDefault(a => a.Username == username && a.Password == password);
             if (acc != null)
             {
-                // Lưu thông tin vào Session
                 HttpContext.Session.SetString("Username", acc.Username);
                 HttpContext.Session.SetInt32("Role", acc.Role);
                 HttpContext.Session.SetInt32("AccountId", acc.Id);
@@ -86,8 +81,44 @@ namespace WebBanHang.Controllers
         // --- 3. CHỨC NĂNG ĐĂNG XUẤT ---
         public IActionResult Logout()
         {
-            HttpContext.Session.Clear(); // Xóa sạch Session
+            HttpContext.Session.Clear();
             return RedirectToAction("Index", "Home");
+        }
+
+        // ====================================================
+        // --- 4. CHỨC NĂNG QUẢN LÝ PHÂN QUYỀN (CHỈ ROLE 1) ---
+        // ====================================================
+
+        [HttpGet]
+        [CustomAuthorize(1)] // Ổ khóa: Chỉ Role 1 mới được vào
+        public IActionResult ManageRoles()
+        {
+            // Lấy ID người đang đăng nhập để không tự hiển thị chính mình (tránh việc tự hạ quyền bản thân)
+            int currentUserId = HttpContext.Session.GetInt32("AccountId") ?? 0;
+
+            // Lấy danh sách tất cả tài khoản trừ tài khoản đang đăng nhập
+            var accounts = _context.Accounts.Where(a => a.Id != currentUserId).ToList();
+
+            return View(accounts);
+        }
+
+        [HttpPost]
+        [CustomAuthorize(1)] // Ổ khóa: Chỉ Role 1 mới được thực hiện đổi quyền
+        public IActionResult UpdateRole(int accountId, int newRole)
+        {
+            var acc = _context.Accounts.Find(accountId);
+            if (acc != null)
+            {
+                // Chỉ cho phép gán Role 1, 2 hoặc 3
+                if (newRole >= 1 && newRole <= 3)
+                {
+                    acc.Role = newRole;
+                    _context.Accounts.Update(acc);
+                    _context.SaveChanges();
+                }
+            }
+            // Cập nhật xong load lại trang
+            return RedirectToAction("ManageRoles");
         }
     }
 }

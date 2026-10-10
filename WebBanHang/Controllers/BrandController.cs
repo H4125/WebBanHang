@@ -40,6 +40,7 @@ namespace WebBanHang.Controllers
         public IActionResult Create(Brand brand)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            ModelState.Remove("Products");
             if (ModelState.IsValid)
             {
                 _context.Brands.Add(brand);
@@ -63,6 +64,7 @@ namespace WebBanHang.Controllers
         public IActionResult Edit(Brand brand)
         {
             if (!IsAdmin()) return RedirectToAction("Login", "Account");
+            ModelState.Remove("Products");
             if (ModelState.IsValid)
             {
                 _context.Brands.Update(brand);
